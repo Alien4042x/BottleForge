@@ -1,0 +1,25 @@
+# macOS system files
+.DS_Store
+
+# Logs and scripts
+*.log
+*.sh
+
+# Xcode user-specific files
+*.xcuserstate
+*.xcscheme
+*.xcscmblueprint
+xcuserdata/
+xcshareddata/WorkspaceSettings.xcsettings
+project.xcworkspace/xcuserdata/
+project.xcworkspace/xcshareddata/
+xcschememanagement.plist
+
+# Build artifacts
+build/
+DerivedData/
+
+# Project-specific user settings (safe to ignore)
+BottleForge.xcodeproj/xcuserdata/
+BottleForge.xcodeproj/project.xcworkspace/xcuserdata/
+BottleForge.xcodeproj/xcshareddata/xcschemes/xcschememanagement.plist

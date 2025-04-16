@@ -24,25 +24,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2784389C2D9718A500DEE1A8 /* GameTweakerX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameTweakerX.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		278438AD2D9718A500DEE1A8 /* GameTweakerXTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameTweakerXTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		278438B72D9718A500DEE1A8 /* GameTweakerXUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameTweakerXUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2784389C2D9718A500DEE1A8 /* BottleForge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BottleForge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		278438AD2D9718A500DEE1A8 /* BottleForgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BottleForgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		278438B72D9718A500DEE1A8 /* BottleForgeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BottleForgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		2784389E2D9718A500DEE1A8 /* GameTweakerX */ = {
+		2784389E2D9718A500DEE1A8 /* BottleForge */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = GameTweakerX;
-			sourceTree = "<group>";
-		};
-		278438B02D9718A500DEE1A8 /* GameTweakerXTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = GameTweakerXTests;
-			sourceTree = "<group>";
-		};
-		278438BA2D9718A500DEE1A8 /* GameTweakerXUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = GameTweakerXUITests;
+			path = BottleForge;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +65,7 @@
 		278438932D9718A500DEE1A8 = {
 			isa = PBXGroup;
 			children = (
-				2784389E2D9718A500DEE1A8 /* GameTweakerX */,
-				278438B02D9718A500DEE1A8 /* GameTweakerXTests */,
-				278438BA2D9718A500DEE1A8 /* GameTweakerXUITests */,
+				2784389E2D9718A500DEE1A8 /* BottleForge */,
 				2784389D2D9718A500DEE1A8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,9 +73,9 @@
 		2784389D2D9718A500DEE1A8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2784389C2D9718A500DEE1A8 /* GameTweakerX.app */,
-				278438AD2D9718A500DEE1A8 /* GameTweakerXTests.xctest */,
-				278438B72D9718A500DEE1A8 /* GameTweakerXUITests.xctest */,
+				2784389C2D9718A500DEE1A8 /* BottleForge.app */,
+				278438AD2D9718A500DEE1A8 /* BottleForgeTests.xctest */,
+				278438B72D9718A500DEE1A8 /* BottleForgeUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +83,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2784389B2D9718A500DEE1A8 /* GameTweakerX */ = {
+		2784389B2D9718A500DEE1A8 /* BottleForge */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 278438C12D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "GameTweakerX" */;
+			buildConfigurationList = 278438C12D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForge" */;
 			buildPhases = (
 				278438982D9718A500DEE1A8 /* Sources */,
 				278438992D9718A500DEE1A8 /* Frameworks */,
@@ -108,18 +96,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				2784389E2D9718A500DEE1A8 /* GameTweakerX */,
+				2784389E2D9718A500DEE1A8 /* BottleForge */,
 			);
-			name = GameTweakerX;
+			name = BottleForge;
 			packageProductDependencies = (
 			);
 			productName = GameTweakerX;
-			productReference = 2784389C2D9718A500DEE1A8 /* GameTweakerX.app */;
+			productReference = 2784389C2D9718A500DEE1A8 /* BottleForge.app */;
 			productType = "com.apple.product-type.application";
 		};
-		278438AC2D9718A500DEE1A8 /* GameTweakerXTests */ = {
+		278438AC2D9718A500DEE1A8 /* BottleForgeTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 278438C42D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "GameTweakerXTests" */;
+			buildConfigurationList = 278438C42D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeTests" */;
 			buildPhases = (
 				278438A92D9718A500DEE1A8 /* Sources */,
 				278438AA2D9718A500DEE1A8 /* Frameworks */,
@@ -130,19 +118,16 @@
 			dependencies = (
 				278438AF2D9718A500DEE1A8 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				278438B02D9718A500DEE1A8 /* GameTweakerXTests */,
-			);
-			name = GameTweakerXTests;
+			name = BottleForgeTests;
 			packageProductDependencies = (
 			);
 			productName = GameTweakerXTests;
-			productReference = 278438AD2D9718A500DEE1A8 /* GameTweakerXTests.xctest */;
+			productReference = 278438AD2D9718A500DEE1A8 /* BottleForgeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		278438B62D9718A500DEE1A8 /* GameTweakerXUITests */ = {
+		278438B62D9718A500DEE1A8 /* BottleForgeUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 278438C72D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "GameTweakerXUITests" */;
+			buildConfigurationList = 278438C72D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeUITests" */;
 			buildPhases = (
 				278438B32D9718A500DEE1A8 /* Sources */,
 				278438B42D9718A500DEE1A8 /* Frameworks */,
@@ -153,14 +138,11 @@
 			dependencies = (
 				278438B92D9718A500DEE1A8 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				278438BA2D9718A500DEE1A8 /* GameTweakerXUITests */,
-			);
-			name = GameTweakerXUITests;
+			name = BottleForgeUITests;
 			packageProductDependencies = (
 			);
 			productName = GameTweakerXUITests;
-			productReference = 278438B72D9718A500DEE1A8 /* GameTweakerXUITests.xctest */;
+			productReference = 278438B72D9718A500DEE1A8 /* BottleForgeUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +168,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 278438972D9718A500DEE1A8 /* Build configuration list for PBXProject "GameTweakerX" */;
+			buildConfigurationList = 278438972D9718A500DEE1A8 /* Build configuration list for PBXProject "BottleForge" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +182,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				2784389B2D9718A500DEE1A8 /* GameTweakerX */,
-				278438AC2D9718A500DEE1A8 /* GameTweakerXTests */,
-				278438B62D9718A500DEE1A8 /* GameTweakerXUITests */,
+				2784389B2D9718A500DEE1A8 /* BottleForge */,
+				278438AC2D9718A500DEE1A8 /* BottleForgeTests */,
+				278438B62D9718A500DEE1A8 /* BottleForgeUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +240,12 @@
 /* Begin PBXTargetDependency section */
 		278438AF2D9718A500DEE1A8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2784389B2D9718A500DEE1A8 /* GameTweakerX */;
+			target = 2784389B2D9718A500DEE1A8 /* BottleForge */;
 			targetProxy = 278438AE2D9718A500DEE1A8 /* PBXContainerItemProxy */;
 		};
 		278438B92D9718A500DEE1A8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2784389B2D9718A500DEE1A8 /* GameTweakerX */;
+			target = 2784389B2D9718A500DEE1A8 /* BottleForge */;
 			targetProxy = 278438B82D9718A500DEE1A8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -392,11 +374,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = GameTweakerX/GameTweakerX.entitlements;
+				CODE_SIGN_ENTITLEMENTS = BottleForge/BottleForge.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"GameTweakerX/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"BottleForge/Preview Content\"";
 				DEVELOPMENT_TEAM = 58HZ49VDDX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -406,8 +389,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.GameTweakerX";
+				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -419,11 +403,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = GameTweakerX/GameTweakerX.entitlements;
+				CODE_SIGN_ENTITLEMENTS = BottleForge/BottleForge.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"GameTweakerX/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"BottleForge/Preview Content\"";
 				DEVELOPMENT_TEAM = 58HZ49VDDX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -433,8 +418,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.GameTweakerX";
+				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -451,11 +437,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.GameTweakerXTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GameTweakerX.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GameTweakerX";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BottleForge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BottleForge";
 			};
 			name = Debug;
 		};
@@ -469,11 +455,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.GameTweakerXTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GameTweakerX.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GameTweakerX";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BottleForge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BottleForge";
 			};
 			name = Release;
 		};
@@ -485,11 +471,11 @@
 				DEVELOPMENT_TEAM = 58HZ49VDDX;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.GameTweakerXUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = GameTweakerX;
+				TEST_TARGET_NAME = BottleForge;
 			};
 			name = Debug;
 		};
@@ -501,18 +487,18 @@
 				DEVELOPMENT_TEAM = 58HZ49VDDX;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.GameTweakerXUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = GameTweakerX;
+				TEST_TARGET_NAME = BottleForge;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		278438972D9718A500DEE1A8 /* Build configuration list for PBXProject "GameTweakerX" */ = {
+		278438972D9718A500DEE1A8 /* Build configuration list for PBXProject "BottleForge" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				278438BF2D9718A500DEE1A8 /* Debug */,
@@ -521,7 +507,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		278438C12D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "GameTweakerX" */ = {
+		278438C12D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForge" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				278438C22D9718A500DEE1A8 /* Debug */,
@@ -530,7 +516,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		278438C42D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "GameTweakerXTests" */ = {
+		278438C42D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				278438C52D9718A500DEE1A8 /* Debug */,
@@ -539,7 +525,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		278438C72D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "GameTweakerXUITests" */ = {
+		278438C72D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				278438C82D9718A500DEE1A8 /* Debug */,
