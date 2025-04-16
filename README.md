@@ -1,5 +1,9 @@
 # 🍷 BottleForge for macOS
 
+![Release](https://img.shields.io/github/v/release/Alien4042x/BottleForge)
+![Downloads](https://img.shields.io/github/downloads/Alien4042x/BottleForge/total)
+![License](https://img.shields.io/github/license/Alien4042x/BottleForge)
+
 **BottleForge** is an experimental macOS utility app for managing and fixing Wine/CrossOver-based wrappers. Whether you're a gamer or tinkerer, it helps apply common fixes for compatibility issues on macOS.
 
 ---
@@ -73,6 +77,8 @@ MIT — free for personal or commercial use.
 
 ## 📸 Screenshots
 ![BottleForge](https://github.com/user-attachments/assets/2519a710-d37f-4773-96c2-a007becd2a1d)
+
+![BottleForge_2](https://github.com/user-attachments/assets/eae78b7f-92e5-4e54-9663-586ef3eaae97)
 
 ---
 
