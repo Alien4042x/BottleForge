@@ -71,7 +71,10 @@ High temperatures while gaming?
 ---
 
 ## 🪪 License
-MIT — free for personal or commercial use.
+
+This project is licensed under the **Mozilla Public License 2.0**.  
+If you modify and distribute any part of the source, you must publish those changes under the same license.  
+More info: [https://mozilla.org/MPL/2.0/](https://mozilla.org/MPL/2.0/)
 
 ---
 
