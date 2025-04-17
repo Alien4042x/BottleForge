@@ -28,13 +28,16 @@ struct AboutView: View {
                 .font(.subheadline)
                 .foregroundColor(.gray)
             
-            Text("by Alien 4042x")
+            Text("by Alien4042x")
                 .font(.subheadline)
                 .foregroundColor(.gray)
             
             Text("Version \(version) (Build \(build))")
                 .font(.caption)
                 .foregroundColor(.secondary)
+            
+            Text("BottleForge is licensed under the Mozilla Public License 2.0 (MPL).")
+            Link("View License", destination: URL(string: "https://www.mozilla.org/MPL/2.0/")!)
 
             Divider()
 
@@ -56,7 +59,7 @@ struct AboutView: View {
                     Text("DEVELOPMENT")
                         .font(.caption)
                         .foregroundColor(.gray)
-                    Text("Alien 4042x")
+                    Text("Alien4042x")
                 }
             }
             .padding(.horizontal)
@@ -64,7 +67,7 @@ struct AboutView: View {
             Spacer()
         }
         .padding()
-        .frame(width: 520, height: 480)
+        .frame(width: 520, height: 520)
     }
 }
 
