@@ -122,6 +122,8 @@ struct WineTricksView: View {
     @State private var selectedMode: WineTricksMode = .macOS
     @State private var unifiedTweaks: [UnifiedTweak] = []
     @State private var installingTweakID: String? = nil
+    @State private var tweakLog: String = ""
+    @State private var showLogPanel = false
 
     @State private var errorMessage = ""
 
@@ -159,6 +161,11 @@ struct WineTricksView: View {
         }
     }
 
+    var tweakLogLines: [String] {
+        let lines = tweakLog.components(separatedBy: .newlines)
+        return Array(lines.suffix(1000)) // zobrazí jen posledních 1000 řádků
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Picker("Mode", selection: $selectedMode) {
@@ -200,6 +207,31 @@ struct WineTricksView: View {
                 if(selectedMode != .macOS)
                 {
                     Text("⚠️ Some components are Linux-specific and may not behave as expected on macOS. Use with caution – tweaks are not always uninstallable and may require manual removal. Proceed only if you know what you're doing.").font(.system(size: 14))
+                    if showLogPanel {
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    ForEach(tweakLogLines.indices, id: \.self) { idx in
+                                        Text(tweakLogLines[idx])
+                                            .font(.system(size: 12, design: .monospaced))
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+
+                                    // 🧷 Anchored marker
+                                    Color.clear.frame(height: 1).id("BOTTOM")
+                                }
+                                .padding()
+                            }
+                            .frame(height: 200)
+                            .background(Color.black.opacity(0.05))
+                            .cornerRadius(8)
+                            .padding(.top, 8)
+                        }
+                    }
+                    
+                    Button(action: { showLogPanel.toggle() }) {
+                        Text(showLogPanel ? "Hide Log" : "Show Log")
+                    }
                 }
             }
 
@@ -323,10 +355,16 @@ struct WineTricksView: View {
                                             } else {
                                                 Button("Install") {
                                                     installingTweakID = ct.id
+                                                    
+                                                    //clear log
+                                                    tweakLog = ""
+                                                    
                                                     runClassicTweakInstall(ct, bottle: bottle, onFinish: {
                                                         installingTweakID = nil
                                                     }, onError: { _ in
                                                         installingTweakID = nil
+                                                    }, onLog: { line in
+                                                        tweakLog += line
                                                     })
                                                 }
                                             }
@@ -468,7 +506,8 @@ struct WineTricksView: View {
         _ tweak: ClassicTweak,
         bottle: Bottle,
         onFinish: @escaping () -> Void = {},
-        onError: @escaping (String) -> Void = { _ in }
+        onError: @escaping (String) -> Void = { _ in },
+        onLog: @escaping (String) -> Void = { _ in }
     ) {
         ClassicTweakExecutor.install(
             tweak,
@@ -509,7 +548,8 @@ struct WineTricksView: View {
                     print("❌ \(errorMessage)")
                     #endif
                 }
-            }
+            },
+            onLog: onLog
         )
     }
 

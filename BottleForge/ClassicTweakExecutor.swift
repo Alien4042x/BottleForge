@@ -20,7 +20,8 @@ struct ClassicTweakExecutor {
         to bottle: Bottle,
         using settings: SettingsManager,
         onError: @escaping (String) -> Void,
-        onFinish: @escaping () -> Void
+        onFinish: @escaping () -> Void,
+        onLog: @escaping (String) -> Void
     ) {
         let missingTools = DependencyChecker.missingWinetricksDependencies()
         guard missingTools.isEmpty else {
@@ -71,41 +72,79 @@ struct ClassicTweakExecutor {
         process.standardOutput = outputPipe
         process.standardError = outputPipe
 
+        var winetricksOutput = ""
+        var lastOutputTime = Date()
+
+        // MARK: Output handling
+        outputPipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            if let output = String(data: data, encoding: .utf8), !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+
+                // 🧹 Filter dots-only output
+                let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                let isOnlyDots = trimmed.allSatisfy { $0 == "." || $0 == " " }
+                if isOnlyDots { return }
+
+                lastOutputTime = Date()
+                
+                winetricksOutput += output
+                
+                DispatchQueue.main.async {
+                    onLog(output) // předání logu
+                }
+                
+                #if DEBUG
+                print("[winetricks output] \(output)")
+                #endif
+            }
+        }
+
+        // MARK: Watchdog – if no output for X seconds
+        let watchdogTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { timer in
+            let silence = Date().timeIntervalSince(lastOutputTime)
+            if silence > 120 && process.isRunning {
+                process.terminate()
+                timer.invalidate()
+                DispatchQueue.main.async {
+                    onError("❌ Installation appears to be stuck (no output for 2 minutes).\n\nPartial output:\n\(winetricksOutput)")
+                }
+            }
+        }
+
+        // MARK: Hard timeout – 15 minutes
+        let timeoutItem = DispatchWorkItem {
+            if process.isRunning {
+                process.terminate()
+                DispatchQueue.main.async {
+                    onError("❌ Installation timed out after 15 minutes.\n\nPartial output:\n\(winetricksOutput)")
+                }
+            }
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 900, execute: timeoutItem)
+
+        // MARK: 🔚 Process finished
         process.terminationHandler = { task in
             DispatchQueue.main.async {
-                let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(data: data, encoding: .utf8) ?? ""
-
-                print("[winetricks output] \(output)")
+                timeoutItem.cancel()
+                watchdogTimer.invalidate()
 
                 if task.terminationStatus != 0 {
-                    if output.contains("does not work on a 64-bit installation") {
+                    if winetricksOutput.contains("does not work on a 64-bit installation") {
                         onError("❌ The tweak \"\(tweak.id)\" requires a 32-bit Wine prefix (WINEARCH=win32).")
                     } else {
-                        onError("❌ winetricks \(tweak.id) failed with code \(task.terminationStatus)\n\n\(output)")
+                        onError("❌ winetricks \(tweak.id) failed with code \(task.terminationStatus)\n\n\(winetricksOutput)")
                     }
                 } else {
                     onFinish()
                 }
             }
         }
-
+        
         do {
             try process.run()
         } catch {
             onError("❌ Failed to start winetricks process.")
         }
-    }
-
-    // MARK: - Uninstall Classic Tweak
-    static func uninstall(
-        _ tweak: ClassicTweak,
-        from bottle: Bottle,
-        using settings: SettingsManager,
-        onError: @escaping (String) -> Void,
-        onFinish: @escaping () -> Void
-    ) {
-        install(tweak, to: bottle, using: settings, onError: onError, onFinish: onFinish)
     }
 
     // MARK: - Extract Embedded winetricks Script
@@ -153,6 +192,9 @@ struct ClassicTweakExecutor {
         export WINEDEBUG=-all
 
         /bin/bash "\(winetricksPath.path)" "$@"
+
+        # ⏳ Wait for background Wine processes to finish
+        wait
         """
 
         do {
