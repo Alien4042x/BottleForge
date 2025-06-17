@@ -53,6 +53,62 @@ struct WineTweakCategory: Codable {
     let name: String
 }
 
+struct ClassicTweak: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let description: String?
+    let dlls: [String]?
+    let depends: [String]?
+    let arch: String?
+
+    var installed: Bool = false
+}
+
+enum WineTricksMode: String, CaseIterable, Identifiable {
+    case macOS, classic
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .macOS: return "🍷 macOS Winetricks"
+        case .classic: return "📦 Classic Winetricks"
+        }
+    }
+}
+
+enum UnifiedTweak: Identifiable {
+    case mac(WineTweak)
+    case classic(ClassicTweak)
+
+    var id: String {
+        switch self {
+        case .mac(let t): return t.id
+        case .classic(let t): return t.id
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .mac(let t): return t.title
+        case .classic(let t): return t.name
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .mac(let t): return t.description
+        case .classic: return "No description available."
+        }
+    }
+
+    var installed: Bool {
+        switch self {
+        case .mac(let t): return t.installed
+        case .classic: return false
+        }
+    }
+}
+
 struct WineTricksView: View {
     @ObservedObject var appState: AppState
     @EnvironmentObject var settings: SettingsManager
@@ -63,6 +119,9 @@ struct WineTricksView: View {
     @State private var showErrorAlert = false
     @State private var selectedTweak: WineTweak? = nil
     @State private var showDetailModal = false
+    @State private var selectedMode: WineTricksMode = .macOS
+    @State private var unifiedTweaks: [UnifiedTweak] = []
+    @State private var installingTweakID: String? = nil
 
     @State private var errorMessage = ""
 
@@ -89,13 +148,33 @@ struct WineTricksView: View {
             return matchesText && matchesCategory
         }
     }
+    
+    var filteredUnifiedTweaks: [UnifiedTweak] {
+        if filter.isEmpty { return unifiedTweaks }
+
+        let lowerFilter = filter.lowercased()
+        return unifiedTweaks.filter { tweak in
+            tweak.title.lowercased().contains(lowerFilter) ||
+            tweak.description.lowercased().contains(lowerFilter)
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("🍷 WineTricks macOS")
-                .font(.title)
+            Picker("Mode", selection: $selectedMode) {
+                ForEach(WineTricksMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }.pickerStyle(.segmented)
+            
+            Text(selectedMode == .macOS ?
+                 "🍷 Winetricks macOS" :
+                 "📦 Classic Winetricks")
+            .font(.title)
 
-            Text("Custom Winetricks-style tweaks tailored for macOS with support for CrossOver and CXPatcher.")
+            Text(selectedMode == .macOS ?
+                 "Custom Winetricks-style tweaks tailored for macOS with support for CrossOver and CXPatcher." :
+                 "Classic winetricks support using original shell scripts from upstream.")
                 .font(.system(size: 14))
 
             Divider()
@@ -107,12 +186,22 @@ struct WineTricksView: View {
                 Button("🧹 Clear Cache for This Bottle") {
                     if let bottle = appState.selectedBottle {
                         clearBottleCache(bottle)
-                        loadTweaks() // ← reload immediately after
+                        switch selectedMode {
+                        case .macOS: loadTweaks()
+                        case .classic: loadClassicTweaks()
+                        }
                     }
                 }
                 .foregroundColor(.red)
             }
             .padding(.bottom)
+            
+            VStack{
+                if(selectedMode != .macOS)
+                {
+                    Text("⚠️ Some components are Linux-specific and may not behave as expected on macOS. Use with caution – tweaks are not always uninstallable and may require manual removal. Proceed only if you know what you're doing.").font(.system(size: 14))
+                }
+            }
 
             if loadingTweaks {
                 ProgressView("Loading tweaks...")
@@ -120,87 +209,136 @@ struct WineTricksView: View {
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(filteredTweaks) { tweak in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(tweak.title)
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text(tweak.description)
-                                        .font(.system(size: 14))
+                        if selectedMode == .macOS {
+                            ForEach(filteredTweaks) { tweak in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(tweak.title)
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Text(tweak.description)
+                                            .font(.system(size: 14))
 
-                                    HStack(spacing: 10) {
-                                        if let company = tweak.company {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "building.2.fill")
-                                                    .font(.system(size: 16))
-                                                Text(company)
-                                                    .font(.system(size: 14))
+                                        HStack(spacing: 10) {
+                                            if let company = tweak.company {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "building.2.fill")
+                                                        .font(.system(size: 16))
+                                                    Text(company)
+                                                        .font(.system(size: 14))
+                                                }
                                             }
-                                        }
 
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "tag.fill")
-                                                .font(.system(size: 14))
-                                            Text(tweak.category.uppercased())
-                                                .font(.system(size: 12))
-                                        }
-
-                                        if let platforms = tweak.platforms {
                                             HStack(spacing: 4) {
-                                                Image(systemName: "desktopcomputer")
+                                                Image(systemName: "tag.fill")
                                                     .font(.system(size: 14))
-                                                Text(platforms.joined(separator: ", "))
+                                                Text(tweak.category.uppercased())
                                                     .font(.system(size: 12))
                                             }
-                                        }
 
-                                        if let version = tweak.version {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "doc.badge.gearshape")
-                                                    .font(.system(size: 14))
-                                                Text("v\(version)")
-                                                    .font(.system(size: 12))
+                                            if let platforms = tweak.platforms {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "desktopcomputer")
+                                                        .font(.system(size: 14))
+                                                    Text(platforms.joined(separator: ", "))
+                                                        .font(.system(size: 12))
+                                                }
                                             }
-                                        }
 
-                                        if let date = tweak.date {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "calendar")
-                                                    .font(.system(size: 14))
-                                                Text(date)
-                                                    .font(.system(size: 12))
+                                            if let version = tweak.version {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "doc.badge.gearshape")
+                                                        .font(.system(size: 14))
+                                                    Text("v\(version)")
+                                                        .font(.system(size: 12))
+                                                }
+                                            }
+
+                                            if let date = tweak.date {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "calendar")
+                                                        .font(.system(size: 14))
+                                                    Text(date)
+                                                        .font(.system(size: 12))
+                                                }
+                                            }
+
+                                            if let longDesc = tweak.description_long, !longDesc.isEmpty {
+                                                Button("Read More") {
+                                                    print("🔍 Read more for: \(tweak.id)")
+                                                    selectedTweak = tweak
+                                                    showDetailModal = true
+                                                }
+                                                .font(.system(size: 12, weight: .medium))
+                                                .buttonStyle(.plain)
+                                                .foregroundColor(Color(.darkGray))
                                             }
                                         }
-                                        
-                                        if let longDesc = tweak.description_long, !longDesc.isEmpty {
-                                            Button("Read More") {
-                                                print("🔍 Read more for: \(tweak.id)")
-                                                selectedTweak = tweak
-                                                showDetailModal = true
+                                    }
+
+                                    Spacer()
+
+                                    if tweak.installed {
+                                       if installingTweakID == tweak.id {
+                                           ProgressView()
+                                               .progressViewStyle(CircularProgressViewStyle())
+                                       } else {
+                                           Button("🗑️ Uninstall") {
+                                               installingTweakID = tweak.id
+                                               uninstallTweak(tweak)
+                                           }
+                                       }
+                                    } else {
+                                        if installingTweakID == tweak.id {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle())
+                                        } else {
+                                            Button("Install") {
+                                                installingTweakID = tweak.id
+                                                installTweak(tweak)
                                             }
-                                            .font(.system(size: 12, weight: .medium))
-                                            .buttonStyle(.plain)
-                                            .foregroundColor(Color(.darkGray))
                                         }
                                     }
                                 }
-
-                                Spacer()
-
-                                if tweak.installed {
-                                    Button("🗑️ Uninstall") {
-                                        uninstallTweak(tweak)
-                                    }
-                                } else {
-                                    Button("Install") {
-                                        installTweak(tweak)
-                                    }
+                                .padding(10)
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
+                                .onChange(of: settings.selectedRuntime) { _ in
+                                    loadTweaks()
                                 }
                             }
-                            .padding(10)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
-                            .onChange(of: settings.selectedRuntime) { _ in
-                                loadTweaks()
+                        } else {
+                            ForEach(filteredUnifiedTweaks) { tweak in
+                                if case .classic(let ct) = tweak {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(ct.name)
+                                                .font(.system(size: 16, weight: .semibold))
+                                        }
+
+                                        Spacer()
+
+                                        if let bottle = appState.selectedBottle {
+                                            if installingTweakID == ct.id {
+                                                ProgressView()
+                                                    .progressViewStyle(CircularProgressViewStyle())
+                                            } else {
+                                                Button("Install") {
+                                                    installingTweakID = ct.id
+                                                    runClassicTweakInstall(ct, bottle: bottle, onFinish: {
+                                                        installingTweakID = nil
+                                                    }, onError: { _ in
+                                                        installingTweakID = nil
+                                                    })
+                                                }
+                                            }
+                                        } else {
+                                            Text("No bottle selected")
+                                                .foregroundColor(.red)
+                                                .font(.system(size: 12))
+                                        }
+                                    }
+                                    .padding(10)
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
+                                }
                             }
                         }
                     }
@@ -209,7 +347,16 @@ struct WineTricksView: View {
         }
         .padding()
         .onAppear {
-            loadTweaks()
+            switch selectedMode {
+            case .macOS: loadTweaks()
+            case .classic: loadClassicTweaks()
+            }
+        }
+        .onChange(of: selectedMode) { newMode in
+            switch newMode {
+            case .macOS: loadTweaks()
+            case .classic: loadClassicTweaks()
+            }
         }
         .alert("Error", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) { }
@@ -242,6 +389,13 @@ struct WineTricksView: View {
         }
     }
 
+    func runClassicTweak(_ name: String) {
+        let task = Process()
+        task.launchPath = "/usr/bin/env"
+        task.arguments = ["bash", "-c", "winetricks \(name)"]
+        task.launch()
+    }
+    
     func loadTweaks() {
         loadingTweaks = true
 
@@ -284,8 +438,18 @@ struct WineTricksView: View {
                     return t
                 }
 
+                let unified = decoded.tweaks.map { tweak -> UnifiedTweak in
+                    var t = tweak
+                    if let bottle = appState.selectedBottle {
+                        let key = "\(t.id)@\(runtime.rawValue)@\(bottle.path.path)"
+                        t.installed = installedKeys.contains(key)
+                    }
+                    return .mac(t)
+                }
+
                 DispatchQueue.main.async {
                     self.tweaks = withStatus
+                    self.unifiedTweaks = unified
                     self.loadingTweaks = false
                 }
             } catch {
@@ -298,7 +462,142 @@ struct WineTricksView: View {
             }
         }.resume()
     }
+    
+    // MARK: - Classic Winetricks installation handler
+    func runClassicTweakInstall(
+        _ tweak: ClassicTweak,
+        bottle: Bottle,
+        onFinish: @escaping () -> Void = {},
+        onError: @escaping (String) -> Void = { _ in }
+    ) {
+        ClassicTweakExecutor.install(
+            tweak,
+            to: bottle,
+            using: settings,
+            onError: { error in
+                errorMessage = error
+                showErrorAlert = true
+                onError(error)
+            },
+            onFinish: {
+                loadClassicTweaks()
 
+                // MARK: - Success handler (classic tweak install complete)
+                let alert = NSAlert()
+                alert.messageText = "Tweak installed"
+                alert.informativeText = "✅ The tweak \"\(tweak.name)\" was successfully installed."
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+
+                onFinish()
+                
+                // MARK: - Cleanup cache after tweak installation
+                let cachePath = FileManager.default.homeDirectoryForCurrentUser
+                    .appendingPathComponent(".cache/winetricks")
+
+                do {
+                    if FileManager.default.fileExists(atPath: cachePath.path) {
+                        try FileManager.default.removeItem(at: cachePath)
+                        #if DEBUG
+                        print("🧹 Winetricks cache deleted: \(cachePath.path)")
+                        #endif
+                    }
+                } catch {
+                    errorMessage = "Failed to delete Winetricks cache: \(error.localizedDescription)"
+                    showErrorAlert = true
+                    #if DEBUG
+                    print("❌ \(errorMessage)")
+                    #endif
+                }
+            }
+        )
+    }
+
+    // MARK: - Classic tweaks loading + parsing
+    func loadClassicTweaks() {
+        loadingTweaks = true
+
+        let url = URL(string: "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks")!
+        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            defer { DispatchQueue.main.async { loadingTweaks = false } }
+
+            guard let data = data, let content = String(data: data, encoding: .utf8) else {
+                DispatchQueue.main.async {
+                    self.errorMessage = "Failed to load classic winetricks script."
+                    self.showErrorAlert = true
+                }
+                return
+            }
+
+            let parsed = parseClassicTweaks(from: content)
+
+            // Get Info to check installation
+            let runtime = settings.selectedRuntime
+            let bottlePath = appState.selectedBottle?.path.path ?? ""
+            let installedKeys = UserDefaults.standard.stringArray(forKey: "installedClassicTweaks") ?? []
+
+            // Remove duplicity + assign status
+            var seen = Set<String>()
+            let tweaksWithStatus = parsed.filter {
+                !$0.id.isEmpty &&
+                !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                seen.insert($0.id).inserted
+            }.map { tweak -> ClassicTweak in
+                var t = tweak
+                let key = "classic:\(t.id)@\(runtime.rawValue)@\(bottlePath)"
+                t.installed = installedKeys.contains(key)
+                return t
+            }
+
+            DispatchQueue.main.async {
+                self.unifiedTweaks = tweaksWithStatus.map { .classic($0) }
+            }
+
+        }.resume()
+    }
+    
+    // MARK: - Regex parsing of classic winetricks script
+    func parseClassicTweaks(from script: String) -> [ClassicTweak] {
+        let pattern = #"(?ms)^load_(\w+)\(\)\s*\{(.*?)^\}"#
+        let regex = try! NSRegularExpression(pattern: pattern)
+
+        var tweaks: [ClassicTweak] = []
+
+        let nsrange = NSRange(script.startIndex..<script.endIndex, in: script)
+        regex.enumerateMatches(in: script, options: [], range: nsrange) { match, _, _ in
+            guard let match = match,
+                  let idRange = Range(match.range(at: 1), in: script),
+                  let bodyRange = Range(match.range(at: 2), in: script) else { return }
+
+            let id = String(script[idRange])
+            let body = String(script[bodyRange])
+
+            func capture(_ key: String) -> String? {
+                let pat = #"\#(key)=\"([^\"]+)\""#
+                let subRegex = try! NSRegularExpression(pattern: pat)
+                if let m = subRegex.firstMatch(in: body, range: NSRange(body.startIndex..., in: body)),
+                   let r = Range(m.range(at: 1), in: body) {
+                    return String(body[r])
+                }
+                return nil
+            }
+
+            let name = capture("title") ?? id
+            let description = capture("desc")
+            let dlls = capture("dlls")?.components(separatedBy: " ")
+            let depends = capture("depends")?.components(separatedBy: " ")
+            let arch = capture("arch")
+            // let uninstall = capture("uninstall") // ➕ nový capture (removed)
+
+            tweaks.append(ClassicTweak(id: id, name: name, description: description, dlls: dlls, depends: depends, arch: arch))
+        }
+
+        return tweaks
+    }
+
+    // MARK: - macOS tweaks caching (load/save)
     func saveToCache(_ data: Data) {
         let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             .appendingPathComponent("cachedTweaks.json")
@@ -306,6 +605,7 @@ struct WineTricksView: View {
         try? data.write(to: cacheURL)
     }
     
+    // MARK: - macOS tweaks caching (load/save)
     func loadFromCacheIfAvailable() {
         let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             .appendingPathComponent("cachedTweaks.json")
@@ -352,6 +652,7 @@ struct WineTricksView: View {
         }
     }
 
+    // MARK: - macOS Winetricks installation handler
     func installTweak(_ tweak: WineTweak) {
         guard let bottle = appState.selectedBottle else {
             #if DEBUG
@@ -364,22 +665,28 @@ struct WineTricksView: View {
         print("🧪 Installing tweak \(tweak.title) into: \(bottle.path.path)")
         #endif
 
+        installingTweakID = tweak.id
+
         TweakExecutor.apply(tweak, to: bottle, using: settings) { error in
             errorMessage = error
             showErrorAlert = true
+            installingTweakID = nil
             #if DEBUG
             print("❌ Tweak install failed: \(error)")
             #endif
         } onFinish: {
             markTweakAsInstalled(tweak.id)
             loadTweaks()
+            installingTweakID = nil
             #if DEBUG
             print("✅ Tweak \(tweak.title) installed successfully")
             #endif
         }
     }
     
+    // MARK: - macOS Winetricks uninstall handler
     func uninstallTweak(_ tweak: WineTweak) {
+        installingTweakID = tweak.id
         let runtime = settings.selectedRuntime
         guard let bottle = appState.selectedBottle else { return }
 
@@ -396,8 +703,10 @@ struct WineTricksView: View {
             #if DEBUG
             print("🗑️ Tweak \(tweak.title) uninstalled (\(key))")
             #endif
+            installingTweakID = nil
         }
     }
+
 
     func tweakKey(for tweak: WineTweak) -> String? {
         guard let bottle = appState.selectedBottle else { return nil }
@@ -421,6 +730,7 @@ struct WineTricksView: View {
         }
     }
     
+    // MARK: - Remove tweak install keys for current bottle
     func clearBottleCache(_ bottle: Bottle) {
         let bottlePath = bottle.path.path
         var installed = UserDefaults.standard.stringArray(forKey: "installedTweaks") ?? []
