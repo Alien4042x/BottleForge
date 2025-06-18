@@ -25,6 +25,22 @@
 - ⚙️ **Runtime Detection**
   - Detect and support both **CrossOver** and **CXPatcher** runtimes
   - Easy toggle between runtimes
+
+- 📦 **Classic Winetricks Support**
+  - Run upstream winetricks shell scripts directly from the app
+  - Useful for power users — not all tweaks are uninstallable or macOS-friendly
+
+- 🛠️ **Homebrew Integration**
+  - Automatically detects missing tools (e.g. cabextract, wget, unzip)
+  - Offers to install them via Homebrew with one click
+
+- 📜 **Tweak Log Panel**
+  - Live terminal-style output for Classic Winetricks installs
+  - Helps identify errors or stuck installations
+
+- 🧯 **Stuck Process Protection**
+  - Automatic timeout and watchdog detection if Winetricks becomes unresponsive
+  - Prevents app freezes and gives useful error feedback
 ---
 
 ## 🧪 Experimental Tips
@@ -79,9 +95,13 @@ More info: [https://mozilla.org/MPL/2.0/](https://mozilla.org/MPL/2.0/)
 ---
 
 ## 📸 Screenshots
-![BottleForge](https://github.com/user-attachments/assets/2519a710-d37f-4773-96c2-a007becd2a1d)
+![BottleForge](https://github.com/user-attachments/assets/2fb24e5e-942c-491d-876b-0ac1b5f03a0c)
 
-![BottleForge_2](https://github.com/user-attachments/assets/eae78b7f-92e5-4e54-9663-586ef3eaae97)
+![BottleForge_winetricks](https://github.com/user-attachments/assets/34fede0f-ecbb-4f6a-9729-98de97e89444)
+
+![BottleForge_settings](https://github.com/user-attachments/assets/ec439d88-7976-4360-8beb-7944f24648df)
+
+![BottleForge_dependencies](https://github.com/user-attachments/assets/648d100c-f511-4de7-aebf-883bd1b3f167)
 
 ---
 
