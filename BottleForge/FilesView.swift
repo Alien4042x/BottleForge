@@ -43,44 +43,48 @@ struct FilesView: View {
                 }.disabled(pathHistory.isEmpty)
             }
             .padding([.top, .horizontal])
-
-            List {
-                ForEach(folderContents, id: \.self) { item in
-                    ClickableRow(
-                        onClick: {
-                            selectedItem = item
-                        },
-                        onDoubleClick: {
-                            if item.hasDirectoryPath {
-                                pathHistory.append(currentPath!)
-                                currentPath = item
-                                loadContents()
-                            } else {
-                                NSWorkspace.shared.open(item)
+            ScrollViewReader { proxy in
+                List {
+                    ForEach(folderContents, id: \.self) { item in
+                        ClickableRow(
+                            onClick: {
+                                selectedItem = item
+                            },
+                            onDoubleClick: {
+                                if item.hasDirectoryPath {
+                                    pathHistory.append(currentPath!)
+                                    currentPath = item
+                                    proxy.scrollTo(folderContents.first)
+                                    loadContents()
+                                    
+                                } else {
+                                    NSWorkspace.shared.open(item)
+                                }
+                            },
+                            content: {
+                                HStack {
+                                    FileIconView(url: item)
+                                    Text(item.lastPathComponent)
+                                        .foregroundColor(item == selectedItem ? .accentColor : .primary)
+                                }
+                                .padding(6)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(item == selectedItem ? Color.accentColor.opacity(0.15) : Color.clear)
+                                )
                             }
-                        },
-                        content: {
-                            HStack {
-                                FileIconView(url: item)
-                                Text(item.lastPathComponent)
-                                    .foregroundColor(item == selectedItem ? .accentColor : .primary)
+                        )
+                        .contextMenu {
+                            Button("📋 Copy Path") {
+                                copyToClipboard(item.path)
                             }
-                            .padding(6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(item == selectedItem ? Color.accentColor.opacity(0.15) : Color.clear)
-                            )
-                        }
-                    )
-                    .contextMenu {
-                        Button("📋 Copy Path") {
-                            copyToClipboard(item.path)
-                        }
-                        Button("🗑️ Delete") {
-                            deleteItem(item)
-                        }
-                        Button("🔍 Reveal in Finder") {
-                            NSWorkspace.shared.activateFileViewerSelecting([item])
+                            Button("🗑️ Delete") {
+                                deleteItem(item)
+                            }
+                            Button("🔍 Reveal in Finder") {
+                                NSWorkspace.shared.activateFileViewerSelecting([item])
+                            }
                         }
                     }
                 }
@@ -199,10 +203,8 @@ struct ClickableRow<Content: View>: NSViewRepresentable {
 
         @objc func handleClick(_ sender: NSClickGestureRecognizer) {
             if sender.numberOfClicksRequired == 1 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    if sender.state == .ended {
-                        self.onClick()
-                    }
+                if sender.state == .ended {
+                    self.onClick()
                 }
             }
         }
