@@ -6,6 +6,8 @@
 
 **BottleForge** is an experimental macOS utility app for managing and fixing Wine/CrossOver-based wrappers. Whether you're a gamer or tinkerer, it helps apply common fixes for compatibility issues on macOS.
 
+- 🎯 Also check out [StealthPointer](https://github.com/Alien4042x/StealthPointer) – hide/show your macOS cursor with hotkeys. Perfect for Wine fullscreen gaming!
+
 ---
 
 ## ✨ Features

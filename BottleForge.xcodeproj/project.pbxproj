@@ -10,27 +10,8 @@
 		27AC02F22E00B2F10087A396 /* winetricks in Resources */ = {isa = PBXBuildFile; fileRef = 27AC02F12E00B2F10087A396 /* winetricks */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		278438AE2D9718A500DEE1A8 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 278438942D9718A500DEE1A8 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 2784389B2D9718A500DEE1A8;
-			remoteInfo = GameTweakerX;
-		};
-		278438B82D9718A500DEE1A8 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 278438942D9718A500DEE1A8 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 2784389B2D9718A500DEE1A8;
-			remoteInfo = GameTweakerX;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		2784389C2D9718A500DEE1A8 /* BottleForge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BottleForge.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		278438AD2D9718A500DEE1A8 /* BottleForgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BottleForgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		278438B72D9718A500DEE1A8 /* BottleForgeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BottleForgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		27AC02F12E00B2F10087A396 /* winetricks */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = winetricks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -44,20 +25,6 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		278438992D9718A500DEE1A8 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		278438AA2D9718A500DEE1A8 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		278438B42D9718A500DEE1A8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -80,8 +47,6 @@
 			isa = PBXGroup;
 			children = (
 				2784389C2D9718A500DEE1A8 /* BottleForge.app */,
-				278438AD2D9718A500DEE1A8 /* BottleForgeTests.xctest */,
-				278438B72D9718A500DEE1A8 /* BottleForgeUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -111,46 +76,6 @@
 			productReference = 2784389C2D9718A500DEE1A8 /* BottleForge.app */;
 			productType = "com.apple.product-type.application";
 		};
-		278438AC2D9718A500DEE1A8 /* BottleForgeTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 278438C42D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeTests" */;
-			buildPhases = (
-				278438A92D9718A500DEE1A8 /* Sources */,
-				278438AA2D9718A500DEE1A8 /* Frameworks */,
-				278438AB2D9718A500DEE1A8 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				278438AF2D9718A500DEE1A8 /* PBXTargetDependency */,
-			);
-			name = BottleForgeTests;
-			packageProductDependencies = (
-			);
-			productName = GameTweakerXTests;
-			productReference = 278438AD2D9718A500DEE1A8 /* BottleForgeTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		278438B62D9718A500DEE1A8 /* BottleForgeUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 278438C72D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeUITests" */;
-			buildPhases = (
-				278438B32D9718A500DEE1A8 /* Sources */,
-				278438B42D9718A500DEE1A8 /* Frameworks */,
-				278438B52D9718A500DEE1A8 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				278438B92D9718A500DEE1A8 /* PBXTargetDependency */,
-			);
-			name = BottleForgeUITests;
-			packageProductDependencies = (
-			);
-			productName = GameTweakerXUITests;
-			productReference = 278438B72D9718A500DEE1A8 /* BottleForgeUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -163,14 +88,6 @@
 				TargetAttributes = {
 					2784389B2D9718A500DEE1A8 = {
 						CreatedOnToolsVersion = 16.2;
-					};
-					278438AC2D9718A500DEE1A8 = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 2784389B2D9718A500DEE1A8;
-					};
-					278438B62D9718A500DEE1A8 = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 2784389B2D9718A500DEE1A8;
 					};
 				};
 			};
@@ -189,8 +106,6 @@
 			projectRoot = "";
 			targets = (
 				2784389B2D9718A500DEE1A8 /* BottleForge */,
-				278438AC2D9718A500DEE1A8 /* BottleForgeTests */,
-				278438B62D9718A500DEE1A8 /* BottleForgeUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -204,20 +119,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		278438AB2D9718A500DEE1A8 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		278438B52D9718A500DEE1A8 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -228,34 +129,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		278438A92D9718A500DEE1A8 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		278438B32D9718A500DEE1A8 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		278438AF2D9718A500DEE1A8 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 2784389B2D9718A500DEE1A8 /* BottleForge */;
-			targetProxy = 278438AE2D9718A500DEE1A8 /* PBXContainerItemProxy */;
-		};
-		278438B92D9718A500DEE1A8 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 2784389B2D9718A500DEE1A8 /* BottleForge */;
-			targetProxy = 278438B82D9718A500DEE1A8 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		278438BF2D9718A500DEE1A8 /* Debug */ = {
@@ -397,13 +271,14 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Radim Veselý. Licensed under the Mozilla Public License 2.0 (MPL).";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -426,85 +301,18 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Radim Veselý. Licensed under the Mozilla Public License 2.0 (MPL).";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		278438C52D9718A500DEE1A8 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BottleForge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BottleForge";
-			};
-			name = Debug;
-		};
-		278438C62D9718A500DEE1A8 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BottleForge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BottleForge";
-			};
-			name = Release;
-		};
-		278438C82D9718A500DEE1A8 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = BottleForge;
-			};
-			name = Debug;
-		};
-		278438C92D9718A500DEE1A8 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Alien-Company.BottleForge";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = BottleForge;
 			};
 			name = Release;
 		};
@@ -525,24 +333,6 @@
 			buildConfigurations = (
 				278438C22D9718A500DEE1A8 /* Debug */,
 				278438C32D9718A500DEE1A8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		278438C42D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				278438C52D9718A500DEE1A8 /* Debug */,
-				278438C62D9718A500DEE1A8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		278438C72D9718A500DEE1A8 /* Build configuration list for PBXNativeTarget "BottleForgeUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				278438C82D9718A500DEE1A8 /* Debug */,
-				278438C92D9718A500DEE1A8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
