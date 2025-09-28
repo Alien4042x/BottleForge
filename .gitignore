@@ -1,25 +1,29 @@
 # macOS system files
 .DS_Store
 
-# Logs and scripts
+# Logs
 *.log
+
+# Shell scripts (pokud nechceš verzovat build scripty)
 *.sh
 
 # Xcode user-specific files
 *.xcuserstate
-*.xcscheme
-*.xcscmblueprint
 xcuserdata/
+
+# Xcode workspace/user schemes (lokální)
+project.xcworkspace/
 xcshareddata/WorkspaceSettings.xcsettings
-project.xcworkspace/xcuserdata/
-project.xcworkspace/xcshareddata/
 xcschememanagement.plist
+
+# SCM blueprint (lokální pro source control integraci)
+*.xcscmblueprint
 
 # Build artifacts
 build/
 DerivedData/
 
-# Project-specific user settings (safe to ignore)
+# Project-specific user settings
 BottleForge.xcodeproj/xcuserdata/
-BottleForge.xcodeproj/project.xcworkspace/xcuserdata/
+BottleForge.xcodeproj/project.xcworkspace/
 BottleForge.xcodeproj/xcshareddata/xcschemes/xcschememanagement.plist
