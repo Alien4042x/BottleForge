@@ -90,10 +90,12 @@ class SettingsManager: ObservableObject {
 
     func clearCrossoverAppPath() {
         crossoverAppPath = nil
+        save()
     }
 
     func clearCxpatcherAppPath() {
         cxpatcherAppPath = nil
+        save()
     }
 
     var wineExecutable: URL? {

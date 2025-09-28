@@ -226,4 +226,67 @@ struct TweakExecutor {
         }
     }
 
+    // MARK: - Import arbitrary .reg content into bottle registry
+    static func importRegistry(
+        content: String,
+        to bottle: Bottle,
+        using settings: SettingsManager,
+        onError: @escaping (String) -> Void,
+        onFinish: @escaping () -> Void
+    ) {
+        guard let appPath = settings.selectedRuntime == .crossover ? settings.crossoverAppPath : settings.cxpatcherAppPath else {
+            onError("❌ CrossOver or CXPatcher path is not set.")
+            return
+        }
+
+        let wineExec = appPath
+            .appendingPathComponent("Contents/SharedSupport/CrossOver/CrossOver-Hosted Application/wine")
+
+        // Write .reg as UTF-16 LE with BOM for maximum compatibility
+        let tmp = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("import.reg")
+        do {
+            let bom = Data([0xFF, 0xFE])
+            var data = content.data(using: .utf16LittleEndian) ?? Data()
+            data = bom + data
+            try data.write(to: tmp)
+        } catch {
+            onError("❌ Failed to write temporary .reg file: \(error.localizedDescription)")
+            return
+        }
+
+        let process = Process()
+        process.executableURL = wineExec
+        process.arguments = ["regedit", "/S", tmp.path]
+
+        var environment = ProcessInfo.processInfo.environment
+        environment["WINEPREFIX"] = bottle.path.path
+        environment["CX_BOTTLE"] = bottle.name
+        environment["PATH"] = wineExec.deletingLastPathComponent().path + ":" + (environment["PATH"] ?? "")
+        environment["USER"] = NSUserName()
+        environment["HOME"] = NSHomeDirectory()
+        process.environment = environment
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        process.terminationHandler = { task in
+            DispatchQueue.main.async {
+                defer { try? FileManager.default.removeItem(at: tmp) }
+
+                if task.terminationStatus != 0 {
+                    onError("❌ regedit import failed with code \(task.terminationStatus)")
+                } else {
+                    onFinish()
+                }
+            }
+        }
+
+        do {
+            try process.run()
+        } catch {
+            onError("❌ Failed to start wine regedit: \(error.localizedDescription)")
+        }
+    }
+
 }

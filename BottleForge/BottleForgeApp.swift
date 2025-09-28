@@ -21,8 +21,7 @@ struct BottleForgeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(state: appState)
-                .frame(width: 1440, height: 720)
-                .fixedSize()
+                .frame(minWidth: 1280, minHeight: 800)
                 .environmentObject(settings)
         }
         .windowStyle(HiddenTitleBarWindowStyle())
@@ -41,6 +40,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         if let window = NSApplication.shared.windows.first {
             window.standardWindowButton(.zoomButton)?.isHidden = true
+            // Enable true vibrancy: transparent window + full-size content
+            window.titleVisibility = .hidden
+            window.titlebarAppearsTransparent = true
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.isMovableByWindowBackground = true
+            window.styleMask.insert(.fullSizeContentView)
         }
     }
     
@@ -48,4 +54,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 }
-

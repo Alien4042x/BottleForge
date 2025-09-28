@@ -163,7 +163,7 @@ struct WineTricksView: View {
 
     var tweakLogLines: [String] {
         let lines = tweakLog.components(separatedBy: .newlines)
-        return Array(lines.suffix(1000)) // zobrazí jen posledních 1000 řádků
+        return Array(lines.suffix(1000))
     }
     
     var body: some View {
@@ -217,7 +217,6 @@ struct WineTricksView: View {
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                     }
 
-                                    // 🧷 Anchored marker
                                     Color.clear.frame(height: 1).id("BOTTOM")
                                 }
                                 .padding()
@@ -333,9 +332,7 @@ struct WineTricksView: View {
                                 }
                                 .padding(10)
                                 .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
-                                .onChange(of: settings.selectedRuntime) { _ in
-                                    loadTweaks()
-                                }
+                                // Runtime change handling moved to container-level
                             }
                         } else {
                             ForEach(filteredUnifiedTweaks) { tweak in
@@ -384,14 +381,22 @@ struct WineTricksView: View {
             }
         }
         .padding()
-        .onAppear {
+        .onChange(of: selectedMode) { newMode in
+            switch newMode {
+            case .macOS: loadTweaks()
+            case .classic: loadClassicTweaks()
+            }
+        }
+        // Reload tweaks when runtime changes, after view updates commit
+        .task(id: settings.selectedRuntime) {
             switch selectedMode {
             case .macOS: loadTweaks()
             case .classic: loadClassicTweaks()
             }
         }
-        .onChange(of: selectedMode) { newMode in
-            switch newMode {
+        // Initial load
+        .onAppear {
+            switch selectedMode {
             case .macOS: loadTweaks()
             case .classic: loadClassicTweaks()
             }
@@ -427,15 +432,10 @@ struct WineTricksView: View {
         }
     }
 
-    func runClassicTweak(_ name: String) {
-        let task = Process()
-        task.launchPath = "/usr/bin/env"
-        task.arguments = ["bash", "-c", "winetricks \(name)"]
-        task.launch()
-    }
+    
     
     func loadTweaks() {
-        loadingTweaks = true
+        DispatchQueue.main.async { self.loadingTweaks = true }
 
         let request = URLRequest(url: tweaksPath, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
 
@@ -555,7 +555,7 @@ struct WineTricksView: View {
 
     // MARK: - Classic tweaks loading + parsing
     func loadClassicTweaks() {
-        loadingTweaks = true
+        DispatchQueue.main.async { self.loadingTweaks = true }
 
         let url = URL(string: "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks")!
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
@@ -629,7 +629,6 @@ struct WineTricksView: View {
             let dlls = capture("dlls")?.components(separatedBy: " ")
             let depends = capture("depends")?.components(separatedBy: " ")
             let arch = capture("arch")
-            // let uninstall = capture("uninstall") // ➕ nový capture (removed)
 
             tweaks.append(ClassicTweak(id: id, name: name, description: description, dlls: dlls, depends: depends, arch: arch))
         }
@@ -748,11 +747,7 @@ struct WineTricksView: View {
     }
 
 
-    func tweakKey(for tweak: WineTweak) -> String? {
-        guard let bottle = appState.selectedBottle else { return nil }
-        let runtime = settings.selectedRuntime
-        return "\(tweak.id)@\(runtime.rawValue)_\(bottle.name)"
-    }
+    
     
     func markTweakAsInstalled(_ id: String) {
         let runtime = settings.selectedRuntime

@@ -37,7 +37,6 @@ struct SettingsView: View {
                         selectApplication { url in
                             if let url = url {
                                 settings.crossoverAppPath = url
-                                settings.cxpatcherAppPath = settings.cxpatcherAppPath
                                 settings.save()
                             }
                         }

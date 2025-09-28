@@ -13,7 +13,6 @@
 
 import SwiftUI
 import Foundation
-import Observation
 
 class AppState: ObservableObject {
     @Published var selectedSection: Section = .diagnostics
@@ -88,27 +87,29 @@ class AppState: ObservableObject {
     }
 }
 
-// Sections in the left panel
+ 
 enum Section: String, CaseIterable, Identifiable {
     case diagnostics = "Diagnostics"
     case files = "File Explorer"
     case wine_tricks = "WineTricks macOS"
+    case bottleconfig = "Bottle Config"
     case settings = "Settings"
     case dependencies = "Dependencies"
     
     var id: String { rawValue }
 }
 
-// Main content
+ 
 struct ContentView: View {
     @ObservedObject var state: AppState
     @EnvironmentObject var settings: SettingsManager
+    @State private var runtimeSelection: SettingsManager.WineRuntime = .crossover
     
     var body: some View {
         ZStack {
-            // NavigationSplitView
+            
             HStack(spacing: 0) {
-                // Sidebar (left panel)
+                
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Section.allCases, id: \.self) { section in
                         HStack {
@@ -137,7 +138,7 @@ struct ContentView: View {
                 .padding(.horizontal, 20)
                 .frame(minWidth: 220, maxWidth: 220)
 
-                // Content (right panel)
+                
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
                         Text("BottleForge")
@@ -160,7 +161,7 @@ struct ContentView: View {
                             openFolderDialog()
                         }
 
-                        Picker("Wine Runtime", selection: $settings.selectedRuntime) {
+                        Picker("Wine Runtime", selection: $runtimeSelection) {
                             if settings.crossoverAppPath != nil {
                                 Text("CrossOver").tag(SettingsManager.WineRuntime.crossover)
                             }
@@ -170,6 +171,11 @@ struct ContentView: View {
                         }
                         .pickerStyle(SegmentedPickerStyle())
                         .frame(width: 250)
+                        .task(id: runtimeSelection) {
+                            if settings.selectedRuntime != runtimeSelection {
+                                settings.selectedRuntime = runtimeSelection
+                            }
+                        }
 
                         Spacer()
                     }
@@ -181,14 +187,22 @@ struct ContentView: View {
                         .padding()
                 }
             }
-            .background(VisualEffectView(material: .hudWindow))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(VisualEffectView(material: .hudWindow, blendingMode: .behindWindow))
             .ignoresSafeArea()
+        }
+        // Keep local selection in sync when runtime changes elsewhere
+        .task(id: settings.selectedRuntime) {
+            runtimeSelection = settings.selectedRuntime
+        }
+        .onAppear {
+            runtimeSelection = settings.selectedRuntime
         }
     }
 
         
 
-    // Section view function
+    
     @ViewBuilder
     private func sectionView() -> some View {
         switch state.selectedSection {
@@ -200,6 +214,9 @@ struct ContentView: View {
                 .id(state.selectedBottle?.path)
         case .wine_tricks:
             WineTricksView(appState: state)
+                .id(state.selectedBottle?.path)
+        case .bottleconfig:
+            BottleConfigView(appState: state)
                 .id(state.selectedBottle?.path)
         case .dependencies:
             DependenciesView()
@@ -221,26 +238,14 @@ struct ContentView: View {
     }
 }
 
-// You can delete BottlesView if not used
-struct BottlesView: View {
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Bottles Section")
-                .font(.title)
-                .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
-            Text("Here you can manage and choose between bottles.")
-                .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
-        }
-        .padding()
-    }
-}
+ 
 
 struct VisualEffectView: NSViewRepresentable {
     var material: NSVisualEffectView.Material
     var blendingMode: NSVisualEffectView.BlendingMode
     var state: NSVisualEffectView.State
 
-    init(material: NSVisualEffectView.Material = .sidebar,
+    init(material: NSVisualEffectView.Material = .hudWindow,
          blendingMode: NSVisualEffectView.BlendingMode = .behindWindow,
          state: NSVisualEffectView.State = .active) {
         self.material = material
@@ -256,7 +261,11 @@ struct VisualEffectView: NSViewRepresentable {
         return view
     }
 
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
+        nsView.state = state
+    }
 }
 
 #Preview {

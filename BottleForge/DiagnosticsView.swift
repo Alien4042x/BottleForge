@@ -19,8 +19,10 @@ struct DiagnosticsView: View {
     @State private var errorMessage: String?
     @State private var showError = false
     @State private var showSuccess = false
+    @State private var showSuccessMetalFX = false
+    @State private var successMessage = ""
 
-    // 🔧 List of available diagnostic fixes
+    
     private let diagnosticFixes: [DiagnosticFix] = [
         DiagnosticFix(
             id: "vcpp_universal_fix",
@@ -71,6 +73,33 @@ struct DiagnosticsView: View {
             } message: {
                 Text("The diagnostic fix \"\(diagnosticFixes.first?.title ?? "")\" was successfully applied.")
             }
+
+            // MetalFX toggle section
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Activate MetalFX")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("Writes NVIDIA registry keys into the selected bottle (HKLM). Use Enable to set required values, or Delete to remove them.")
+                        .font(.system(size: 14))
+                    Text("To enable MetalFX: download GPTK from Apple, rename nvngx-on-metalfx.dll to nvngx.dll, and place it together with nvapi64.dll into the bottle's system32 folder.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Button("Enable") { applyMetalFX(enable: true) }
+                    .buttonStyle(.borderedProminent)
+                Button("Delete") { deleteMetalFXKeys() }
+                    .foregroundColor(.red)
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
+            .alert("Done", isPresented: $showSuccessMetalFX) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(successMessage)
+            }
         }
         .padding()
         .alert("Error", isPresented: $showError) {
@@ -80,7 +109,7 @@ struct DiagnosticsView: View {
         }
     }
 
-    // Shared handler to apply the fix
+    
     func applyDiagnosticFix(_ fix: DiagnosticFix) {
         guard let bottle = appState.selectedBottle else {
             errorMessage = "❌ No bottle selected."
@@ -124,9 +153,62 @@ struct DiagnosticsView: View {
             #endif
         })
     }
+
+    // MARK: - MetalFX registry toggle
+    func applyMetalFX(enable: Bool) {
+        guard let bottle = appState.selectedBottle else {
+            errorMessage = "❌ No bottle selected."
+            showError = true
+            return
+        }
+
+        let dword = enable ? "dword:00000001" : "dword:00000000"
+        let fullPath = enable ? "C\\\\Windows\\\\System32" : ""
+
+        var reg = "Windows Registry Editor Version 5.00\n\n"
+        reg += "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NVIDIA Corporation\\Global]\n"
+        reg += "\"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}\"=\(dword)\n\n"
+        reg += "[HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\nvlddmkm]\n"
+        reg += "\"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}\"=\(dword)\n\n"
+        reg += "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NVIDIA Corporation\\Global\\NGXCore]\n"
+        reg += "\"FullPath\"=\"\(fullPath)\"\n"
+
+        TweakExecutor.importRegistry(content: reg, to: bottle, using: settings, onError: { err in
+            errorMessage = err
+            showError = true
+        }, onFinish: {
+            successMessage = enable ? "✅ MetalFX has been enabled for this bottle." : "✅ MetalFX has been disabled for this bottle."
+            showSuccessMetalFX = true
+        })
+    }
+
+    // MARK: - Hard delete MetalFX values via .reg minus syntax
+    func deleteMetalFXKeys() {
+        guard let bottle = appState.selectedBottle else {
+            errorMessage = "❌ No bottle selected."
+            showError = true
+            return
+        }
+
+        var reg = "Windows Registry Editor Version 5.00\n\n"
+        reg += "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NVIDIA Corporation\\Global]\n"
+        reg += "\"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}\"=-\n\n"
+        reg += "[HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\nvlddmkm]\n"
+        reg += "\"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}\"=-\n\n"
+        reg += "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NVIDIA Corporation\\Global\\NGXCore]\n"
+        reg += "\"FullPath\"=-\n"
+
+        TweakExecutor.importRegistry(content: reg, to: bottle, using: settings, onError: { err in
+            errorMessage = err
+            showError = true
+        }, onFinish: {
+            successMessage = "✅ MetalFX keys were deleted from this bottle."
+            showSuccessMetalFX = true
+        })
+    }
 }
 
-// Struct for universal fix
+ 
 struct DiagnosticFix: Identifiable {
     let id: String
     let title: String
@@ -134,7 +216,7 @@ struct DiagnosticFix: Identifiable {
     let dllOverrides: [WineTweakFile]
 }
 
-// Extension for convenient DLL override creation without URL
+ 
 extension WineTweakFile {
     init(dll: String, mode: String) {
         self.name = nil

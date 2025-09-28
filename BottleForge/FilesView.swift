@@ -143,7 +143,7 @@ struct FilesView: View {
     }
 }
 
-// NSImage Resizing Extension
+ 
 extension NSImage {
     func toImage(size: NSSize) -> NSImage {
         let resized = NSImage(size: size)
@@ -154,7 +154,7 @@ extension NSImage {
     }
 }
 
-// Component for icon by file type
+ 
 struct FileIconView: View {
     let url: URL
 
