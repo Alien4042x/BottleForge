@@ -14,10 +14,16 @@ struct BottleConfigView: View {
     @EnvironmentObject var settings: SettingsManager
 
     @State private var toggles: [EnvToggle] = []
+    @State private var editingId: UUID? = nil
     @State private var isDirty = false
     @State private var loadingError: String?
     @State private var infoMessage: String?
     @State private var existingBoolKeys: Set<String> = []
+    private let nonEditableKeys: Set<String> = [
+        "D3DM_ENABLE_METALFX",
+        "ROSETTA_ADVERTISE_AVX",
+        "MTL_HUD_ENABLED"
+    ]
 
     private let defaultKeys: [String] = [
         "WINEESYNC",
@@ -62,8 +68,15 @@ struct BottleConfigView: View {
         // Do not duplicate if already present in file; if toggle exists, just set default state
         if let idx = toggles.firstIndex(where: { $0.key == tip.key }) {
             toggles[idx].isOn = tip.defaultOn
+            if !nonEditableKeys.contains(tip.key) {
+                editingId = toggles[idx].id
+            }
         } else {
-            toggles.append(EnvToggle(key: tip.key, isOn: tip.defaultOn, isBoolean: true))
+            let new = EnvToggle(key: tip.key, isOn: tip.defaultOn, isBoolean: true)
+            toggles.append(new)
+            if !nonEditableKeys.contains(tip.key) {
+                editingId = new.id
+            }
         }
         existingBoolKeys.insert(tip.key)
         isDirty = true
@@ -100,13 +113,15 @@ struct BottleConfigView: View {
                     .font(.system(size: 13))
                     .foregroundColor(.secondary)
 
-                ToggleListView(toggles: $toggles) {
+                ToggleListView(toggles: $toggles, editingId: $editingId, nonEditableKeys: nonEditableKeys) {
                     isDirty = true
                 }
 
                 HStack {
                     Button("Add variable") {
-                        toggles.append(EnvToggle(key: "NEW_VARIABLE", isOn: false, isBoolean: true))
+                        let new = EnvToggle(key: "NEW_VARIABLE", isOn: false, isBoolean: true)
+                        toggles.append(new)
+                        editingId = new.id
                         isDirty = true
                     }
                     .disabled(appState.selectedBottle == nil)
@@ -335,6 +350,11 @@ struct BottleConfigView: View {
         var order: [String] = [] // to preserve first-seen order
 
         func isManaged(_ key: String) -> Bool { return values[key] != nil }
+        func wasManagedBefore(_ key: String) -> Bool {
+            // Keys we control via toggles: either known defaults or previously detected as boolean-like
+            // Never treat skipKeys as managed for deletion
+            return (existingBoolKeys.contains(key) || defaultKeys.contains(key)) && !skipKeys.contains(key)
+        }
 
         for line in bodyLines {
             guard let re = parseRe else { continue }
@@ -348,6 +368,12 @@ struct BottleConfigView: View {
 
                 if isManaged(key) {
                     // Skip: managed keys will be re-appended from `values`
+                    continue
+                }
+
+                // If the key used to be managed (boolean-like) but is now removed from toggles,
+                // drop it entirely from the file by not preserving this line.
+                if wasManagedBefore(key) {
                     continue
                 }
 
@@ -428,7 +454,7 @@ struct BottleConfigView: View {
 // MARK: - EnvToggle & ToggleListView
 
 struct EnvToggle: Identifiable, Hashable {
-    var id: String { key }
+    let id: UUID = UUID()
     var key: String
     var isOn: Bool
     var isBoolean: Bool
@@ -436,32 +462,57 @@ struct EnvToggle: Identifiable, Hashable {
 
 struct ToggleListView: View {
     @Binding var toggles: [EnvToggle]
+    @Binding var editingId: UUID?
+    let nonEditableKeys: Set<String>
     var onChange: () -> Void
+    @FocusState private var focusedId: UUID?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach($toggles) { $t in
+            ForEach(toggles.indices, id: \.self) { idx in
+                let binding = $toggles[idx]
+                let t = toggles[idx]
                 HStack(alignment: .center, spacing: 12) {
-                    Toggle(isOn: $t.isOn) {
-                        Text(t.key)
-                            .font(.system(size: 13))
+                    Toggle(isOn: binding.isOn) {
+                        Group {
+                            if editingId == t.id {
+                                TextField("ENV_VAR", text: binding.key)
+                                    .font(.system(size: 13))
+                                    .textFieldStyle(.roundedBorder)
+                                    .focused($focusedId, equals: t.id)
+                                    .onSubmit {
+                                        editingId = nil
+                                        onChange()
+                                    }
+                            } else {
+                                Text(t.key)
+                                    .font(.system(size: 13))
+                                    .onTapGesture(count: 2) {
+                                        guard !nonEditableKeys.contains(t.key) else { return }
+                                        editingId = t.id
+                                        focusedId = t.id
+                                    }
+                            }
+                        }
                     }
                     .toggleStyle(CheckboxToggleStyle())
 
                     Spacer()
 
                     Button(role: .destructive) {
-                        if let idx = toggles.firstIndex(of: t) {
-                            toggles.remove(at: idx)
-                            onChange()
-                        }
+                        toggles.remove(at: idx)
+                        onChange()
                     } label: {
                         Text("Remove")
                     }
                 }
-                .onChange(of: t.isOn) { _ in onChange() }
+                .onChange(of: toggles[idx].isOn) { _ in onChange() }
+                .onChange(of: toggles[idx].key) { _ in onChange() }
                 Divider()
             }
+        }
+        .onChange(of: editingId) { new in
+            focusedId = new
         }
     }
 }

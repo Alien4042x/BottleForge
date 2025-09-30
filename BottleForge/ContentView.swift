@@ -148,19 +148,21 @@ struct ContentView: View {
                     .padding(.top, 10)
                     .padding()
 
-                    HStack(spacing: 16) {
+                    HStack(alignment: .center, spacing: 8) {
+                        Text("Bottle:")
                         Picker("Bottle", selection: $state.selectedBottle) {
                             Text("None").tag(Optional<Bottle>.none)
                             ForEach(state.bottles, id: \.self) { bottle in
                                 Text(bottle.name).tag(Optional(bottle))
                             }
                         }
-                        .frame(width: 200)
+                        .labelsHidden()
 
                         Button("Add Custom Path") {
                             openFolderDialog()
                         }
 
+                        Text("Wine Runtime:")
                         Picker("Wine Runtime", selection: $runtimeSelection) {
                             if settings.crossoverAppPath != nil {
                                 Text("CrossOver").tag(SettingsManager.WineRuntime.crossover)
@@ -170,14 +172,12 @@ struct ContentView: View {
                             }
                         }
                         .pickerStyle(SegmentedPickerStyle())
-                        .frame(width: 250)
+                        .labelsHidden()
                         .task(id: runtimeSelection) {
                             if settings.selectedRuntime != runtimeSelection {
                                 settings.selectedRuntime = runtimeSelection
                             }
                         }
-
-                        Spacer()
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 10)

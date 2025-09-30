@@ -128,6 +128,22 @@ struct DependenciesView: View {
                 }
             }
 
+            // MARK: - Game Porting Toolkit
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 10) {
+                    Text("Game Porting Toolkit 3:")
+                        .bold()
+                    Button("Download") {
+                        if let url = URL(string: "https://developer.apple.com/games/game-porting-toolkit/") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    .font(.footnote)
+                    .buttonStyle(.bordered)
+                    Spacer()
+                }
+            }
+
             Spacer()
         }
         .padding()
@@ -173,4 +189,3 @@ struct DependenciesView: View {
         isLoadingBrew = false
     }
 }
-
