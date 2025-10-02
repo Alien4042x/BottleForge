@@ -43,6 +43,11 @@
 - 🧯 **Stuck Process Protection**
   - Automatic timeout and watchdog detection if Winetricks becomes unresponsive
   - Prevents app freezes and gives useful error feedback
+
+- 🍾 **Bottle Config**
+  - New configuration panel for individual bottles
+  - Enable or disable custom scripts and tweaks per bottle
+  - Provides easier control over runtime behavior
 ---
 
 ## 🧪 Experimental Tips
@@ -75,7 +80,6 @@ High temperatures while gaming?
 
 - Still in **early development**
 - No auto-updates yet
-- Not all CrossOver features exposed
 - Advanced tweaks require editing external JSON
 
 ---
@@ -97,13 +101,9 @@ More info: [https://mozilla.org/MPL/2.0/](https://mozilla.org/MPL/2.0/)
 ---
 
 ## 📸 Screenshots
-![BottleForge](https://github.com/user-attachments/assets/2fb24e5e-942c-491d-876b-0ac1b5f03a0c)
 
-![BottleForge_winetricks](https://github.com/user-attachments/assets/34fede0f-ecbb-4f6a-9729-98de97e89444)
-
-![BottleForge_settings](https://github.com/user-attachments/assets/ec439d88-7976-4360-8beb-7944f24648df)
-
-![BottleForge_dependencies](https://github.com/user-attachments/assets/648d100c-f511-4de7-aebf-883bd1b3f167)
+<img width="1652" height="944" alt="Snímek obrazovky 2025-10-02 v 19 43 00" src="https://github.com/user-attachments/assets/ba774f99-317d-4b7a-8a53-5bda937618e9" />
+<img width="1652" height="944" alt="Snímek obrazovky 2025-10-02 v 19 44 17" src="https://github.com/user-attachments/assets/ffc0d52b-1e47-4ead-b0a4-1763d6e1e9e5" />
 
 ---
 
