@@ -188,7 +188,9 @@ struct WineTricksView: View {
 
             HStack {
                 TextField("Search tweak...", text: $filter)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(6)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
                 Spacer()
                 Button("🧹 Clear Cache for This Bottle") {
                     if let bottle = appState.selectedBottle {
@@ -199,7 +201,7 @@ struct WineTricksView: View {
                         }
                     }
                 }
-                .foregroundColor(.red)
+                .buttonStyle(.borderedProminent)
             }
             .padding(.bottom)
             
@@ -222,7 +224,7 @@ struct WineTricksView: View {
                                 .padding()
                             }
                             .frame(height: 200)
-                            .background(Color.black.opacity(0.05))
+                            .background(Color(red: 0.16, green: 0.18, blue: 0.22))
                             .cornerRadius(8)
                             .padding(.top, 8)
                         }
@@ -317,6 +319,7 @@ struct WineTricksView: View {
                                                installingTweakID = tweak.id
                                                uninstallTweak(tweak)
                                            }
+                                           .foregroundColor(.red)
                                        }
                                     } else {
                                         if installingTweakID == tweak.id {
@@ -331,7 +334,7 @@ struct WineTricksView: View {
                                     }
                                 }
                                 .padding(10)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
                                 // Runtime change handling moved to container-level
                             }
                         } else {
@@ -372,7 +375,7 @@ struct WineTricksView: View {
                                         }
                                     }
                                     .padding(10)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
                                 }
                             }
                         }

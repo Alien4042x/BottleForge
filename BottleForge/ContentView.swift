@@ -91,7 +91,7 @@ class AppState: ObservableObject {
 enum Section: String, CaseIterable, Identifiable {
     case diagnostics = "Diagnostics"
     case files = "File Explorer"
-    case wine_tricks = "WineTricks macOS"
+    case wine_tricks = "Winetricks macOS"
     case bottleconfig = "Bottle Config"
     case settings = "Settings"
     case dependencies = "Dependencies"
@@ -104,6 +104,7 @@ struct ContentView: View {
     @ObservedObject var state: AppState
     @EnvironmentObject var settings: SettingsManager
     @State private var runtimeSelection: SettingsManager.WineRuntime = .crossover
+    @State private var hoveredSection: Section? = nil
     
     var body: some View {
         ZStack {
@@ -115,18 +116,26 @@ struct ContentView: View {
                         HStack {
                             Text(section.rawValue)
                                 .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(state.selectedSection == section ? .white : .primary)
                             Spacer()
                         }
                         .padding(.vertical, 10)
                         .padding(.horizontal, 12)
                         .frame(maxWidth: .infinity)
-                        .background(
-                            state.selectedSection == section ?
-                                Color.black.opacity(0.1) :
-                                Color.clear
-                        )
+                        .background({ () -> Color in
+                            if state.selectedSection == section {
+                                return Color(red: 0.24, green: 0.27, blue: 0.32)
+                            } else if hoveredSection == section {
+                                return Color(red: 0.18, green: 0.20, blue: 0.24)
+                            } else {
+                                return Color.clear
+                            }
+                        }())
                         .cornerRadius(8)
                         .contentShape(Rectangle())
+                        .onHover { hovering in
+                            hoveredSection = hovering ? section : (hoveredSection == section ? nil : hoveredSection)
+                        }
                         .onTapGesture {
                             state.selectedSection = section
                         }
@@ -188,7 +197,7 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(VisualEffectView(material: .hudWindow, blendingMode: .behindWindow))
+            .background(Color(red: 0.12, green: 0.14, blue: 0.17))
             .ignoresSafeArea()
         }
         // Keep local selection in sync when runtime changes elsewhere

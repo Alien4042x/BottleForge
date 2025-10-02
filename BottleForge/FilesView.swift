@@ -35,7 +35,7 @@ struct FilesView: View {
                 Text("📂 Path: \(currentPath?.path ?? "None")")
                     .font(.system(size: 14))
                 Spacer()
-                Button("🔙 Back") {
+                Button("Back") {
                     if !pathHistory.isEmpty {
                         currentPath = pathHistory.removeLast()
                         loadContents()
@@ -65,29 +65,30 @@ struct FilesView: View {
                                 HStack {
                                     FileIconView(url: item)
                                     Text(item.lastPathComponent)
-                                        .foregroundColor(item == selectedItem ? .accentColor : .primary)
+                                        .foregroundColor(item == selectedItem ? .white : .primary)
                                 }
                                 .padding(6)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(item == selectedItem ? Color.accentColor.opacity(0.15) : Color.clear)
+                                        .fill(item == selectedItem ? Color(red: 0.24, green: 0.27, blue: 0.32) : Color.clear)
                                 )
                             }
                         )
+                        .listRowBackground(Color(red: 0.12, green: 0.14, blue: 0.17))
                         .contextMenu {
                             Button("📋 Copy Path") {
                                 copyToClipboard(item.path)
                             }
-                            Button("🗑️ Delete") {
-                                deleteItem(item)
-                            }
+                            Button(role: .destructive) { deleteItem(item) } label: { Text("🗑️ Delete") }
                             Button("🔍 Reveal in Finder") {
                                 NSWorkspace.shared.activateFileViewerSelecting([item])
                             }
                         }
                     }
                 }
+                .listStyle(.plain)
+                .background(Color(red: 0.12, green: 0.14, blue: 0.17))
             }
         }
         .onAppear {

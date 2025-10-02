@@ -505,6 +505,7 @@ struct ToggleListView: View {
                     } label: {
                         Text("Remove")
                     }
+                    .foregroundColor(.red)
                 }
                 .onChange(of: toggles[idx].isOn) { _ in onChange() }
                 .onChange(of: toggles[idx].key) { _ in onChange() }

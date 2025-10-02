@@ -38,13 +38,15 @@ struct BottleForgeApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Force dark appearance for a modern dark UI
+        NSApp.appearance = NSAppearance(named: .darkAqua)
         if let window = NSApplication.shared.windows.first {
             window.standardWindowButton(.zoomButton)?.isHidden = true
-            // Enable true vibrancy: transparent window + full-size content
             window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
-            window.isOpaque = false
-            window.backgroundColor = .clear
+            // Use an opaque, modern dark background (not pure black)
+            window.isOpaque = true
+            window.backgroundColor = NSColor(calibratedRed: 0.12, green: 0.14, blue: 0.17, alpha: 1.0)
             window.isMovableByWindowBackground = true
             window.styleMask.insert(.fullSizeContentView)
         }

@@ -19,25 +19,34 @@ struct AboutView: View {
                 .scaledToFit()
                 .frame(width: 128, height: 128)
                 .cornerRadius(20)
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color(white: 0.40))
+                )
                 .padding(.top, 20)
 
             Text("BottleForge")
                 .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.primary)
 
             Text("Powerful Wine environment manager for macOS.")
                 .font(.subheadline)
-                .foregroundColor(.gray)
-            
+                .foregroundColor(.secondary)
+
             Text("by Alien4042x")
                 .font(.subheadline)
-                .foregroundColor(.gray)
-            
+                .foregroundColor(.secondary)
+
             Text("Version \(version) (Build \(build))")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
             Text("BottleForge is licensed under the Mozilla Public License 2.0 (MPL).")
+                .font(.caption)
+                .foregroundColor(.secondary)
             Link("View License", destination: URL(string: "https://www.mozilla.org/MPL/2.0/")!)
+                .font(.caption)
 
             Divider()
 
@@ -58,8 +67,10 @@ struct AboutView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("DEVELOPMENT")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                     Text("Alien4042x")
+                        .font(.body)
+                        .foregroundColor(.primary)
                 }
             }
             .padding(.horizontal)

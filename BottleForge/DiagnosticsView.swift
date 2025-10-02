@@ -23,18 +23,16 @@ struct DiagnosticsView: View {
     @State private var successMessage = ""
 
     
-    private let diagnosticFixes: [DiagnosticFix] = [
-        DiagnosticFix(
-            id: "vcpp_universal_fix",
-            title: "Fix Visual C++ 2015–2022 Runtime",
-            description: "Applies override for unified Visual C++ Redistributable (32-bit and 64-bit) runtime libraries.\nUse this fix only if your app or game keeps prompting to install Visual C++ Redistributables.\n(Both versions may be required by some apps.)",
-            dllOverrides: [
-                "msvcp140", "msvcp140_1", "msvcp140_2",
-                "vcruntime140", "vcruntime140_1",
-                "concrt140", "vcomp140"
-            ].map { WineTweakFile(dll: $0, mode: "native,builtin") }
-        )
-    ]
+    private let vcppFix = DiagnosticFix(
+        id: "vcpp_universal_fix",
+        title: "Fix Visual C++ 2015–2022 Runtime",
+        description: "Applies override for unified Visual C++ Redistributable (32-bit and 64-bit) runtime libraries.\nUse this fix only if your app or game keeps prompting to install Visual C++ Redistributables.",
+        dllOverrides: [
+            "msvcp140", "msvcp140_1", "msvcp140_2",
+            "vcruntime140", "vcruntime140_1",
+            "concrt140", "vcomp140"
+        ].map { WineTweakFile(dll: $0, mode: "native,builtin") }
+    )
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -49,29 +47,30 @@ struct DiagnosticsView: View {
                 .font(.system(size: 14))
                 .padding(.bottom, 4)
 
-            ForEach(diagnosticFixes) { fix in
-                HStack {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(fix.title)
-                            .font(.system(size: 16, weight: .semibold))
-                        Text(fix.description)
-                            .font(.system(size: 14))
-                    }
-
-                    Spacer()
-
-                    Button("🛠️ Run Fix") {
-                        applyDiagnosticFix(fix)
-                    }
-                    .buttonStyle(.borderedProminent)
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(vcppFix.title)
+                        .font(.system(size: 16, weight: .semibold))
+                    Text(vcppFix.description)
+                        .font(.system(size: 14))
+                    Text("(Both versions may be required by some apps.)")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
                 }
-                .padding(10)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
+
+                Spacer()
+
+                Button("🛠️ Run Fix") {
+                    applyDiagnosticFix(vcppFix)
+                }
+                .buttonStyle(.borderedProminent)
             }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
             .alert("✅ Fix Applied", isPresented: $showSuccess) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text("The diagnostic fix \"\(diagnosticFixes.first?.title ?? "")\" was successfully applied.")
+                Text("The diagnostic fix \"\(vcppFix.title)\" was successfully applied.")
             }
 
             // MetalFX toggle section
@@ -94,7 +93,7 @@ struct DiagnosticsView: View {
                     .foregroundColor(.red)
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.10)))
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
             .alert("Done", isPresented: $showSuccessMetalFX) {
                 Button("OK", role: .cancel) {}
             } message: {
