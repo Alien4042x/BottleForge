@@ -80,7 +80,7 @@ struct DiagnosticsView: View {
                         .font(.system(size: 16, weight: .semibold))
                     Text("Writes NVIDIA registry keys into the selected bottle (HKLM). Use Enable to set required values, or Delete to remove them.")
                         .font(.system(size: 14))
-                    Text("To enable MetalFX: download GPTK from Apple, rename nvngx-on-metalfx.dll to nvngx.dll, and place it together with nvapi64.dll into the bottle's system32 folder.")
+                    Text("To enable MetalFX: download GPTK from Apple, rename nvngx-on-metalfx.dll and .so to nvngx.dll and nvngx.so, nvngx.dll then put them with nvapi64.dll into system32 folder.")
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                 }

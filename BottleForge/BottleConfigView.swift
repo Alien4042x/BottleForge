@@ -22,7 +22,8 @@ struct BottleConfigView: View {
     private let nonEditableKeys: Set<String> = [
         "D3DM_ENABLE_METALFX",
         "ROSETTA_ADVERTISE_AVX",
-        "MTL_HUD_ENABLED"
+        "MTL_HUD_ENABLED",
+        "D3DM_SUPPORT_DXR"
     ]
 
     private let defaultKeys: [String] = [
@@ -30,7 +31,8 @@ struct BottleConfigView: View {
         "WINEMSYNC",
         "D3DM_ENABLE_METALFX",
         "ROSETTA_ADVERTISE_AVX",
-        "MTL_HUD_ENABLED"
+        "MTL_HUD_ENABLED",
+        "D3DM_SUPPORT_DXR"
     ]
 
     private let skipKeys: Set<String> = [
@@ -49,7 +51,7 @@ struct BottleConfigView: View {
     private let tips: [TipItem] = [
         TipItem(
             key: "D3DM_ENABLE_METALFX",
-            description: "MetalFX upscaling (similar to DLSS/FSR). Increases FPS by rendering at lower resolution and upscaling on GPU. Not all games support it and requires that MetalFX is installed on your system.\nTo enable MetalFX: download GPTK from Apple, rename nvngx-on-metalfx.dll to nvngx.dll, and place it together with nvapi64.dll into the bottle's system32 folder.",
+            description: "MetalFX upscaling (similar to DLSS/FSR). Increases FPS by rendering at lower resolution and upscaling on GPU. Not all games support it and requires that MetalFX is installed on your system.\nTo enable MetalFX: download GPTK from Apple, rename nvngx-on-metalfx.dll and .so to nvngx.dll and nvngx.so, nvngx.dll then put them with nvapi64.dll into system32 folder.",
             defaultOn: true
         ),
         TipItem(
@@ -60,6 +62,11 @@ struct BottleConfigView: View {
         TipItem(
             key: "MTL_HUD_ENABLED",
             description: "Metal HUD – GPU-only overlay with FPS and basic GPU metrics.",
+            defaultOn: false
+        ),
+        TipItem(
+            key: "D3DM_SUPPORT_DXR",
+            description: "Enables DirectX Raytracing (DXR) features in D3DMetal’s DirectX 12 backend. Defaults to OFF on M1/M2 and ON on M3 and newer Macs. Turning this on may improve visual quality in supported games but can reduce performance.",
             defaultOn: false
         )
     ]
@@ -182,17 +189,13 @@ struct BottleConfigView: View {
             }
             existingBoolKeys = present
 
-            // Seed with defaults + what exists in file
-            var keys = Set(defaultKeys)
-            keys.formUnion(envMap.keys)
             var newToggles: [EnvToggle] = []
-            for k in keys.sorted() {
+            for k in envMap.keys.sorted() {
                 if skipKeys.contains(k) { continue }
-                let raw = envMap[k] ?? "0"
+                let raw = envMap[k]!
                 let lowered = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                 let isBoolLike = ["0","1","true","false","yes","no","on","off"].contains(lowered)
-                if !isBoolLike && envMap[k] != nil {
-                    // Non-boolean string present in file – preserve it but do not show in toggles
+                if !isBoolLike {
                     continue
                 }
                 let on = normalizeBool(raw)
