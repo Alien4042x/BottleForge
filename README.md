@@ -4,8 +4,7 @@
 [![Downloads](https://img.shields.io/github/downloads/Alien4042x/BottleForge/total)](https://github.com/Alien4042x/BottleForge/releases)
 [![License](https://img.shields.io/github/license/Alien4042x/BottleForge)](https://github.com/Alien4042x/BottleForge/blob/main/LICENSE)
 
-**BottleForge** is an experimental macOS utility for managing and fixing CrossOver/CXPatcher bottles.  
-It serves as a macOS-friendly alternative to the Linux Winetricks tool.  
+**BottleForge** is an experimental macOS utility for managing and fixing CrossOver/CXPatcher bottles.It serves as a macOS-friendly alternative to the Linux Winetricks tool.
 Whether you're a gamer or tinkerer, it helps apply common fixes for compatibility issues on macOS.
 
 - 🎯 Also check out [StealthPointer](https://github.com/Alien4042x/StealthPointer) – hide/show your macOS cursor with hotkeys. Perfect for Wine fullscreen gaming!
