@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 // MARK: - BottleConfigView
 
@@ -518,5 +519,496 @@ struct ToggleListView: View {
         .onChange(of: editingId) { new in
             focusedId = new
         }
+    }
+}
+
+// MARK: - GameConfigView
+
+struct GameConfigView: View {
+    @ObservedObject var appState: AppState
+
+    enum GameEngine: String, CaseIterable, Identifiable {
+        case unreal = "Unreal Engine"
+        case cryEngine = "CryEngine"
+
+        var id: String { rawValue }
+    }
+
+    enum ConfigPreset: String, CaseIterable, Identifiable {
+        case compatibility = "Compatibility"
+        case performance = "Performance"
+
+        var id: String { rawValue }
+    }
+
+    @State private var engine: GameEngine = .unreal
+    @State private var preset: ConfigPreset = .compatibility
+
+    @State private var useAutoResolution = true
+    @State private var widthText = ""
+    @State private var heightText = ""
+    @State private var disableVsync = true
+    @State private var forceBorderless = true
+    @State private var includeComments = true
+
+    @State private var statusMessage: String?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("🎮 Game Config")
+                .font(.title)
+            Text("Generate and export one config file directly from UI. No long shell commands needed.")
+                .font(.system(size: 14))
+            Divider()
+
+            if let bottle = appState.selectedBottle {
+                Text("Selected bottle: \(bottle.name)")
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+            }
+
+            GroupBox("Engine + Preset") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Picker("Engine", selection: $engine) {
+                        ForEach(GameEngine.allCases) { e in
+                            Text(e.rawValue).tag(e)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Picker("Preset", selection: $preset) {
+                        ForEach(ConfigPreset.allCases) { p in
+                            Text(p.rawValue).tag(p)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .padding(.horizontal, 6)
+            }
+
+            GroupBox("Display") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Toggle("Auto-detect monitor resolution", isOn: $useAutoResolution)
+
+                    HStack {
+                        TextField("Width", text: $widthText)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 90)
+                            .disabled(useAutoResolution)
+                        Text("x")
+                        TextField("Height", text: $heightText)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 90)
+                            .disabled(useAutoResolution)
+                        Button("Detect") { applyDetectedResolution() }
+                    }
+                }
+                .padding(.horizontal, 6)
+            }
+
+            GroupBox("Tweaks") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Disable VSync", isOn: $disableVsync)
+                    Toggle("Force borderless/windowed fullscreen", isOn: $forceBorderless)
+                    Toggle("Write comments into generated files", isOn: $includeComments)
+                }
+                .padding(.horizontal, 6)
+            }
+
+            HStack {
+                Button("Export Config...") { exportConfigFile() }
+            }
+
+            if let err = errorMessage {
+                Text(err).foregroundColor(.red)
+            }
+            if let msg = statusMessage {
+                Text(msg)
+                    .font(.system(size: 11, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+                    .help(msg)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 4)
+            }
+
+            GroupBox("Notes") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("General")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("• Export creates one portable file: autoexec.cfg (CryEngine) or Engine.ini (Unreal).")
+                    Text("• Some games ignore custom configs or rewrite values at runtime.")
+
+                    Text("Unreal Engine")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("• Some games also use GameUserSettings.ini. Copy relevant lines there when needed.")
+                    Text("• Risky Unreal overrides are included as commented lines (;). Enable only per game testing.")
+                    Text("• If needed, set read-only manually after export: chmod 444 <file>")
+
+                    Text("CryEngine")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("• autoexec.cfg usually works as portable override, but final load order is game-specific.")
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+            }
+        }
+        .onAppear {
+            applyDetectedResolution()
+        }
+    }
+
+    private func applyDetectedResolution() {
+        guard let res = detectPrimaryResolution() else { return }
+        widthText = "\(res.width)"
+        heightText = "\(res.height)"
+    }
+
+    private func detectPrimaryResolution() -> (width: Int, height: Int)? {
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        guard let screen else { return nil }
+        let frame = screen.frame
+        let scale = screen.backingScaleFactor
+        let width = max(1, Int((frame.width * scale).rounded()))
+        let height = max(1, Int((frame.height * scale).rounded()))
+        return (width, height)
+    }
+
+    private func resolvedResolution() -> (Int, Int)? {
+        if useAutoResolution, let auto = detectPrimaryResolution() {
+            return (auto.width, auto.height)
+        }
+
+        guard let w = Int(widthText), let h = Int(heightText), w > 0, h > 0 else {
+            return nil
+        }
+        return (w, h)
+    }
+
+    private func exportConfigFile() {
+        errorMessage = nil
+        statusMessage = nil
+
+        guard let (width, height) = resolvedResolution() else {
+            errorMessage = "Resolution is invalid."
+            return
+        }
+
+        let savePanel = NSSavePanel()
+        savePanel.title = "Export game config"
+        savePanel.prompt = "Export"
+        savePanel.nameFieldStringValue = engine == .cryEngine ? "autoexec.cfg" : "Engine.ini"
+        let desktopDirectory = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Desktop", isDirectory: true)
+        if FileManager.default.fileExists(atPath: desktopDirectory.path) {
+            savePanel.directoryURL = desktopDirectory
+        }
+        do {
+            if savePanel.runModal() != .OK || savePanel.url == nil {
+                statusMessage = "Export canceled."
+                return
+            }
+
+            let targetURL = savePanel.url!
+            let content = buildPortableExportContent(width: width, height: height)
+            try writeExportFile(url: targetURL, content: content)
+            statusMessage = "Exported: \(targetURL.path)"
+        } catch {
+            errorMessage = "Export failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func buildPortableExportContent(width: Int, height: Int) -> String {
+        let vsyncValue = disableVsync ? 0 : 1
+        let vsyncBool = disableVsync ? "False" : "True"
+        let fullscreenMode = forceBorderless ? 1 : 0
+
+        switch engine {
+        case .cryEngine:
+            return buildCryEngineBody(width: width, height: height, vsyncValue: vsyncValue) + "\n"
+        case .unreal:
+            let header = includeComments ? "; Generated by BottleForge for manual import.\n; If needed rename/move this file to game-specific path.\n\n" : ""
+            return header + buildUnrealEngineIniBody(vsyncValue: vsyncValue, screenPercentage: screenPercentage(for: preset)) + "\n\n" + buildUnrealGameUserSettingsBody(vsyncBool: vsyncBool, width: width, height: height, fullscreenMode: fullscreenMode) + "\n"
+        }
+    }
+
+    private func screenPercentage(for preset: ConfigPreset) -> Int {
+        switch preset {
+        case .compatibility: return 85
+        case .performance: return 80
+        }
+    }
+
+    private func buildUnrealEngineIniBody(vsyncValue: Int, screenPercentage: Int) -> String {
+        let engineHeader = includeComments ? "; Generated by BottleForge Game Config\n; Engine: Unreal\n" : ""
+        let optionalRiskyBlock = includeComments ? """
+        ; === Optional per-game overrides (can break some UE titles) ===
+        ; r.FidelityFX.FSR.Enabled=1
+        ; r.TemporalAA.Upsampling=1
+        ; r.FidelityFX.FSR.QualityMode=2
+        ; r.Lumen.DiffuseIndirect.Allow=0
+        ; r.Lumen.DiffuseIndirect.AsyncCompute=0
+        ; r.LumenScene.Lighting.AsyncCompute=0
+        ; r.Lumen.ScreenProbeGather.AsyncCompute=0
+        ; r.EnableAsyncComputeVolumetricFog=0
+        """ : ""
+        return """
+        \(engineHeader)[/Script/Engine.RendererSettings]
+        ; === Shader stutter fix ===
+        r.pso.CreateOnRHIThread=true
+        r.PSOPrecaching=1
+
+        ; === Render scale (safe default) ===
+        r.VSync=\(vsyncValue)
+        r.ScreenPercentage=\(screenPercentage)
+
+        ; === TAA tweaks for better sharpness ===
+        r.AntiAliasingMethod=2
+        r.TemporalAA.Quality=4
+        r.TemporalAA.Algorithm=1
+        r.TemporalAACurrentFrameWeight=0.25
+        r.TemporalAAFilterSize=0.2
+        r.TemporalAASamples=4
+        r.Tonemapper.Sharpen=0.6
+
+        ; === Tonemapping ===
+        r.Tonemapper.Quality=3
+        r.TonemapperGamma=2.2
+
+        ; === Shadows ===
+        r.ShadowQuality=2
+        r.Shadow.MaxResolution=2048
+        r.Shadow.MaxCSMResolution=1024
+        r.Shadow.RadiusThreshold=0.05
+
+        ; === Reflections ===
+        r.SSR=1
+        r.SSR.Quality=1
+        r.SSR.Temporal=1
+        r.SSR.HalfResSceneColor=1
+        r.SSR.MaxRoughness=0.9
+        r.ReflectionEnvironment=1
+
+        ; === Ambient Occlusion ===
+        r.AmbientOcclusionLevels=1
+        r.AmbientOcclusionRadiusScale=0.3
+        r.AmbientOcclusionPower=1.2
+        r.AmbientOcclusionMaxQuality=1
+
+        ; === Lumen / async defaults (safer across games) ===
+        r.Lumen.DiffuseIndirect.Allow=1
+        r.Lumen.DiffuseIndirect.AsyncCompute=0
+        r.LumenScene.Lighting.AsyncCompute=0
+        r.Lumen.ScreenProbeGather.AsyncCompute=0
+        r.EnableAsyncComputeVolumetricFog=0
+
+        ; === Disable heavy post-processing ===
+        r.FilmGrain=0
+        r.BloomQuality=0
+        r.LensFlareQuality=0
+        r.MotionBlurQuality=0
+        r.DefaultFeature.MotionBlur=0
+
+        ; === Textures + detail ===
+        r.MipMapLODBias=0
+        r.MaxAnisotropy=8
+        r.DetailMode=1
+        r.Streaming.PoolSize=1024
+
+        ; === View distance + volumetrics ===
+        r.ViewDistanceScale=1.2
+        r.VolumetricFog=0
+        r.VolumetricCloud=1
+        r.SkyAtmosphere=1
+
+        \(optionalRiskyBlock)
+        """
+    }
+
+    private func buildUnrealGameUserSettingsBody(vsyncBool: String, width: Int, height: Int, fullscreenMode: Int) -> String {
+        let userHeader = includeComments ? "; Generated by BottleForge Game Config\n; Resolution + display settings\n" : ""
+        return """
+        \(userHeader)[/Script/Engine.GameUserSettings]
+        bUseVSync=\(vsyncBool)
+        ResolutionSizeX=\(width)
+        ResolutionSizeY=\(height)
+        LastUserConfirmedResolutionSizeX=\(width)
+        LastUserConfirmedResolutionSizeY=\(height)
+        FullscreenMode=\(fullscreenMode)
+        LastConfirmedFullscreenMode=\(fullscreenMode)
+        PreferredFullscreenMode=\(fullscreenMode)
+        Version=5
+        """
+    }
+
+    private func buildCryEngineBody(width: Int, height: Int, vsyncValue: Int) -> String {
+        let maxFps: Int = {
+            switch preset {
+            case .compatibility: return 120
+            case .performance: return 165
+            }
+        }()
+
+        let fsrQuality: Int = {
+            switch preset {
+            case .compatibility: return 2
+            case .performance: return 3
+            }
+        }()
+
+        let fsrSharpness: Double = {
+            switch preset {
+            case .compatibility: return 0.45
+            case .performance: return 0.70
+            }
+        }()
+
+        let globalQuality: Int = {
+            switch preset {
+            case .compatibility: return 3
+            case .performance: return 2
+            }
+        }()
+
+        let objectQuality: Int = {
+            switch preset {
+            case .compatibility: return 3
+            case .performance: return 2
+            }
+        }()
+
+        let shadowQuality: Int = {
+            switch preset {
+            case .compatibility: return 3
+            case .performance: return 2
+            }
+        }()
+
+        let shadowTexRes: Int = {
+            switch preset {
+            case .compatibility: return 2048
+            case .performance: return 1536
+            }
+        }()
+
+        let shadowPoolSize: Int = {
+            switch preset {
+            case .compatibility: return 4096
+            case .performance: return 3072
+            }
+        }()
+
+        let postProcessingQuality: Int = {
+            switch preset {
+            case .compatibility: return 3
+            case .performance: return 2
+            }
+        }()
+
+        func comment(_ text: String) -> String {
+            includeComments ? "; \(text)\n" : ""
+        }
+
+        return """
+        \(comment("========================="))\
+        \(comment("CryEngine Apple Silicon Optimized Config"))\
+        \(comment("Generated by BottleForge"))\
+        \(comment("========================="))\
+        \(comment("-------- Console & UI --------"))\
+        con_restricted=0
+        wh_pl_showfirecursor=1
+
+        \(comment("-------- General / Console --------"))\
+        sys_MaxFPS=\(maxFps)
+        r_VSync=\(vsyncValue)
+
+        \(comment("-------- Resolution (auto-detected) --------"))\
+        r_Width=\(width)
+        r_Height=\(height)
+        r_Fullscreen=\(forceBorderless ? 0 : 1)
+
+        \(comment("-------- Upscaling / FSR --------"))\
+        r_SuperResolution_mode=1
+        r_SuperResolution_AMD_FSR_QualityMode=\(fsrQuality)
+        r_SuperResolution_AMD_FSR_CustomResolutionScaleWH=1
+        r_SuperResolution_Sharpness=\(String(format: "%.2f", fsrSharpness))
+
+        \(comment("-------- CPU / Threads --------"))\
+        sys_job_system_max_worker=-1
+
+        \(comment("-------- Memory / Streaming --------"))\
+        sys_preload=1
+        sys_PakStreamCache=1
+        sys_budget_videomem=6144
+        sys_budget_sysmem=24576
+        r_TexturesStreamingMaxRequestedMB=4096
+        r_TexturesStreamPoolSize=4096
+        r_texturesstreamingMinUsableMips=1
+        r_texturesstreamingSkipMips=1
+
+        \(comment("-------- Post-processing --------"))\
+        r_Sharpening=0.5
+        r_ChromaticAberration=0
+        r_HDRGrainAmount=0.0
+        r_DepthOfField=0
+        r_MotionBlur=0
+        r_Reflections=0
+        r_SSReflections=0
+        r_DepthOfFieldBokehQuality=1
+        r_HDRBloom=0
+        r_HDRVignetting=0
+
+        \(comment("-------- LOD & View Distance --------"))\
+        e_ViewDistRatio=180
+        e_ViewDistRatioVegetation=180
+        e_LodRatio=6
+        e_ObjQuality=\(objectQuality)
+        e_LodFaceAreaTargetSize=0.0015
+
+        \(comment("-------- Shadows --------"))\
+        e_ShadowsMaxTexRes=\(shadowTexRes)
+        e_ShadowsPoolSize=\(shadowPoolSize)
+
+        \(comment("-------- Water --------"))\
+        e_WaterTessellationAmount=8
+
+        \(comment("-------- Rain / Weather --------"))\
+        r_Rain=1
+        r_RainAmount=0.7
+        r_RainDistMultiplier=1.0
+        r_RainMaxViewDist=22
+        r_RainMaxViewDist_Deferred=60
+        r_RainIgnoreNearest=1
+        wh_env_RainCurrentAmount=0.6
+        wh_env_RainThreshold=0.3
+        wh_env_RainWindStrength=15
+        wh_env_PuddleCreationSpeed=0.009
+        wh_env_PuddleDryupSpeed=0.001
+
+        \(comment("-------- Other --------"))\
+        wh_ui_ApseUnloadMode=1
+        i_mouse_smooth=0
+
+        \(comment("-------- Graphics Details --------"))\
+        sys_spec_characters=\(globalQuality)
+        sys_spec_globalillumination=\(globalQuality)
+        sys_spec_light=\(globalQuality)
+        sys_spec_objectdetail=\(objectQuality)
+        sys_spec_particles=\(globalQuality)
+        sys_spec_postprocessing=\(postProcessingQuality)
+        sys_spec_quality=\(globalQuality)
+        sys_spec_shading=\(globalQuality)
+        sys_spec_shadows=\(shadowQuality)
+        sys_spec_texture=\(globalQuality)
+        """
+    }
+
+    private func writeExportFile(url: URL, content: String) throws {
+        let fm = FileManager.default
+        let dir = url.deletingLastPathComponent()
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        try content.write(to: url, atomically: true, encoding: .utf8)
     }
 }

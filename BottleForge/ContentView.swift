@@ -92,6 +92,7 @@ enum Section: String, CaseIterable, Identifiable {
     case diagnostics = "Diagnostics"
     case files = "File Explorer"
     case wine_tricks = "Winetricks macOS"
+    case game_config = "Game Config"
     case bottleconfig = "Bottle Config"
     case settings = "Settings"
     case dependencies = "Dependencies"
@@ -223,6 +224,9 @@ struct ContentView: View {
                 .id(state.selectedBottle?.path)
         case .wine_tricks:
             WineTricksView(appState: state)
+                .id(state.selectedBottle?.path)
+        case .game_config:
+            GameConfigView(appState: state)
                 .id(state.selectedBottle?.path)
         case .bottleconfig:
             BottleConfigView(appState: state)
