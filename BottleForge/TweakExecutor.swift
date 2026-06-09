@@ -17,6 +17,13 @@ struct TweakExecutor {
         "download.zip.dll-files.com",
         "raw.githubusercontent.com"
     ]
+
+    private static func isAllowedHost(_ host: String) -> Bool {
+        let normalizedHost = host.lowercased()
+        return allowedHosts.contains { allowedHost in
+            normalizedHost == allowedHost || normalizedHost.hasSuffix(".\(allowedHost)")
+        }
+    }
     
     static func apply(
         _ tweak: WineTweak,
@@ -25,16 +32,21 @@ struct TweakExecutor {
         onError: @escaping (String) -> Void,
         onFinish: @escaping () -> Void
     ) {
-        guard let appPath = settings.selectedRuntime == .crossover ? settings.crossoverAppPath : settings.cxpatcherAppPath else {
+        guard let runtime = RuntimeResolver.environment(for: settings),
+              runtime.isExecutableAvailable(runtime.wineExecutable) else {
             onError("❌ CrossOver or CXPatcher path is not set.")
             return
         }
 
-        let wineExec = appPath
-            .appendingPathComponent("Contents/SharedSupport/CrossOver/CrossOver-Hosted Application/wine")
-
         var errorMessages: [String] = []
+        let errorQueue = DispatchQueue(label: "BottleForge.TweakExecutor.apply.errors")
         let group = DispatchGroup()
+
+        func appendError(_ message: String) {
+            errorQueue.async {
+                errorMessages.append(message)
+            }
+        }
 
         for file in tweak.files ?? [] {
             // 1️⃣ DLL download
@@ -42,7 +54,7 @@ struct TweakExecutor {
                let dest = file.destination,
                let url = URL(string: urlStr),
                let host = url.host,
-               TweakExecutor.allowedHosts.contains(where: { host.contains($0) }) {
+               TweakExecutor.isAllowedHost(host) {
 
                 let destinationURL = bottle.path
                     .appendingPathComponent("drive_c/windows/system32")
@@ -58,7 +70,7 @@ struct TweakExecutor {
                         defer { group.leave() }
 
                         guard let data = data else {
-                            errorMessages.append("❌ Failed to download: \(urlStr)")
+                            appendError("❌ Failed to download: \(urlStr)")
                             return
                         }
 
@@ -69,7 +81,7 @@ struct TweakExecutor {
                             print("✅ DLL saved: \(destinationURL.lastPathComponent)")
                             #endif
                         } catch {
-                            errorMessages.append("❌ Failed to save DLL: \(dest)")
+                            appendError("❌ Failed to save DLL: \(dest)")
                         }
 
                     }.resume()
@@ -80,23 +92,17 @@ struct TweakExecutor {
                 #endif
             } else {
                 // Missing required values, this is an error
-                errorMessages.append("❌ DLL source is not valid: \(file.source_url ?? "nil")")
+                appendError("❌ DLL source is not valid: \(file.source_url ?? "nil")")
             }
             // REG override
             if let dll = file.dll, let mode = file.mode {
                 group.enter()
 
                 let process = Process()
-                process.executableURL = wineExec
+                process.executableURL = runtime.wineExecutable
                 process.arguments = ["cmd", "/c", "REG ADD HKCU\\Software\\Wine\\DllOverrides /v \(dll) /d \(mode) /f"]
 
-                // 🌍 Set environment like in terminal
-                var environment = ProcessInfo.processInfo.environment
-                environment["WINEPREFIX"] = bottle.path.path
-                environment["CX_BOTTLE"] = bottle.name // Přidáme i CX_BOTTLE
-                environment["PATH"] = wineExec.deletingLastPathComponent().path + ":" + (environment["PATH"] ?? "")
-                environment["USER"] = NSUserName()
-                environment["HOME"] = NSHomeDirectory()
+                let environment = runtime.processEnvironment(for: bottle)
 
                 // 💬 Debug: show environment
                 #if DEBUG
@@ -110,7 +116,7 @@ struct TweakExecutor {
 
                 process.terminationHandler = { task in
                     if task.terminationStatus != 0 {
-                        errorMessages.append("❌ REG ADD for \(dll) failed.")
+                        appendError("❌ REG ADD for \(dll) failed.")
                     }
                     group.leave()
                 }
@@ -118,7 +124,7 @@ struct TweakExecutor {
                 do {
                     try process.run()
                 } catch {
-                    errorMessages.append("❌ Failed to start wine process.")
+                    appendError("❌ Failed to start wine process.")
                     group.leave()
                 }
             }
@@ -127,10 +133,15 @@ struct TweakExecutor {
         }
 
         group.notify(queue: .main) {
-            if !errorMessages.isEmpty {
-                onError(errorMessages.joined(separator: "\n"))
-            } else {
-                onFinish()
+            errorQueue.async {
+                let messages = errorMessages
+                DispatchQueue.main.async {
+                    if !messages.isEmpty {
+                        onError(messages.joined(separator: "\n"))
+                    } else {
+                        onFinish()
+                    }
+                }
             }
         }
     }
@@ -142,16 +153,21 @@ struct TweakExecutor {
         onError: @escaping (String) -> Void,
         onFinish: @escaping () -> Void
     ) {
-        guard let appPath = settings.selectedRuntime == .crossover ? settings.crossoverAppPath : settings.cxpatcherAppPath else {
+        guard let runtime = RuntimeResolver.environment(for: settings),
+              runtime.isExecutableAvailable(runtime.wineExecutable) else {
             onError("❌ CrossOver or CXPatcher path is not set.")
             return
         }
 
-        let wineExec = appPath
-            .appendingPathComponent("Contents/SharedSupport/CrossOver/CrossOver-Hosted Application/wine")
-
         var errorMessages: [String] = []
+        let errorQueue = DispatchQueue(label: "BottleForge.TweakExecutor.uninstall.errors")
         let group = DispatchGroup()
+
+        func appendError(_ message: String) {
+            errorQueue.async {
+                errorMessages.append(message)
+            }
+        }
         
         for file in tweak.files ?? [] {
             // 1️⃣ REG DELETE override
@@ -159,17 +175,10 @@ struct TweakExecutor {
                 group.enter()
 
                 let process = Process()
-                process.executableURL = wineExec
+                process.executableURL = runtime.wineExecutable
                 process.arguments = ["cmd", "/c", "REG DELETE HKCU\\Software\\Wine\\DllOverrides /v \(dll) /f"]
 
-                var environment = ProcessInfo.processInfo.environment
-                environment["WINEPREFIX"] = bottle.path.path
-                environment["CX_BOTTLE"] = bottle.name
-                environment["PATH"] = wineExec.deletingLastPathComponent().path + ":" + (environment["PATH"] ?? "")
-                environment["USER"] = NSUserName()
-                environment["HOME"] = NSHomeDirectory()
-
-                process.environment = environment
+                process.environment = runtime.processEnvironment(for: bottle)
 
                 let outputPipe = Pipe()
                 process.standardOutput = outputPipe
@@ -185,7 +194,7 @@ struct TweakExecutor {
 
                 process.terminationHandler = { task in
                     if task.terminationStatus != 0 {
-                        errorMessages.append("❌ REG DELETE for \(dll) failed.")
+                        appendError("❌ REG DELETE for \(dll) failed.")
                     }
                     group.leave()
                 }
@@ -193,7 +202,7 @@ struct TweakExecutor {
                 do {
                     try process.run()
                 } catch {
-                    errorMessages.append("❌ Failed to start wine process for uninstall.")
+                    appendError("❌ Failed to start wine process for uninstall.")
                     group.leave()
                 }
             }
@@ -211,17 +220,22 @@ struct TweakExecutor {
                         print("🗑️ DLL deleted: \(dllPath.lastPathComponent)")
                         #endif
                     } catch {
-                        errorMessages.append("❌ Failed to delete DLL: \(dllPath.lastPathComponent)")
+                        appendError("❌ Failed to delete DLL: \(dllPath.lastPathComponent)")
                     }
                 }
             }
         }
 
         group.notify(queue: .main) {
-            if !errorMessages.isEmpty {
-                onError(errorMessages.joined(separator: "\n"))
-            } else {
-                onFinish()
+            errorQueue.async {
+                let messages = errorMessages
+                DispatchQueue.main.async {
+                    if !messages.isEmpty {
+                        onError(messages.joined(separator: "\n"))
+                    } else {
+                        onFinish()
+                    }
+                }
             }
         }
     }
@@ -234,16 +248,15 @@ struct TweakExecutor {
         onError: @escaping (String) -> Void,
         onFinish: @escaping () -> Void
     ) {
-        guard let appPath = settings.selectedRuntime == .crossover ? settings.crossoverAppPath : settings.cxpatcherAppPath else {
+        guard let runtime = RuntimeResolver.environment(for: settings),
+              runtime.isExecutableAvailable(runtime.wineExecutable) else {
             onError("❌ CrossOver or CXPatcher path is not set.")
             return
         }
 
-        let wineExec = appPath
-            .appendingPathComponent("Contents/SharedSupport/CrossOver/CrossOver-Hosted Application/wine")
-
         // Write .reg as UTF-16 LE with BOM for maximum compatibility
-        let tmp = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("import.reg")
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BottleForge-\(UUID().uuidString).reg")
         do {
             let bom = Data([0xFF, 0xFE])
             var data = content.data(using: .utf16LittleEndian) ?? Data()
@@ -255,16 +268,10 @@ struct TweakExecutor {
         }
 
         let process = Process()
-        process.executableURL = wineExec
+        process.executableURL = runtime.wineExecutable
         process.arguments = ["regedit", "/S", tmp.path]
 
-        var environment = ProcessInfo.processInfo.environment
-        environment["WINEPREFIX"] = bottle.path.path
-        environment["CX_BOTTLE"] = bottle.name
-        environment["PATH"] = wineExec.deletingLastPathComponent().path + ":" + (environment["PATH"] ?? "")
-        environment["USER"] = NSUserName()
-        environment["HOME"] = NSHomeDirectory()
-        process.environment = environment
+        process.environment = runtime.processEnvironment(for: bottle)
 
         let pipe = Pipe()
         process.standardOutput = pipe

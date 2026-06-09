@@ -23,8 +23,7 @@ struct FilesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("🔍 Bottle File Explorer")
-                .font(.title)
+            SectionTitle(title: "Bottle File Explorer", systemImage: "folder")
 
             Text("Browse and manage files inside your Wine bottle – similar to Finder.")
                 .font(.system(size: 14))
@@ -32,7 +31,7 @@ struct FilesView: View {
             Divider()
             
             HStack {
-                Text("📂 Path: \(currentPath?.path ?? "None")")
+                Label(currentPath?.path ?? "None", systemImage: "folder")
                     .font(.system(size: 14))
                 Spacer()
                 Button("Back") {
@@ -77,12 +76,18 @@ struct FilesView: View {
                         )
                         .listRowBackground(Color(red: 0.12, green: 0.14, blue: 0.17))
                         .contextMenu {
-                            Button("📋 Copy Path") {
+                            Button {
                                 copyToClipboard(item.path)
+                            } label: {
+                                Label("Copy Path", systemImage: "doc.on.doc")
                             }
-                            Button(role: .destructive) { deleteItem(item) } label: { Text("🗑️ Delete") }
-                            Button("🔍 Reveal in Finder") {
+                            Button(role: .destructive) { deleteItem(item) } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            Button {
                                 NSWorkspace.shared.activateFileViewerSelecting([item])
+                            } label: {
+                                Label("Reveal in Finder", systemImage: "magnifyingglass")
                             }
                         }
                     }

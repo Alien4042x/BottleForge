@@ -20,8 +20,7 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("⚙️ Settings")
-                .font(.title)
+            SectionTitle(title: "Settings", systemImage: "gearshape")
 
             Text("Configuration tools for setting up launchers like CrossOver or CXPatcher.")
                 .font(.system(size: 14))
@@ -71,18 +70,18 @@ struct SettingsView: View {
                     Spacer()
                     VStack(alignment: .trailing, spacing: 8) {
                         if settings.isValid {
-                            Text("✅ App path is set.")
+                            Label("App path is set.", systemImage: "checkmark.circle.fill")
                                 .foregroundColor(.green)
                         } else {
-                            Text("⚠️ Please set at least one app path.")
+                            Label("Please set at least one app path.", systemImage: "exclamationmark.triangle.fill")
                                 .foregroundColor(.red)
                         }
 
                         if settings.hasExecutables {
-                            Text("✅ Wine & Regedit found.")
+                            Label("Wine & Regedit found.", systemImage: "checkmark.circle.fill")
                                 .foregroundColor(.green)
                         } else {
-                            Text("⚠️ Executables missing in available app.")
+                            Label("Executables missing in available app.", systemImage: "exclamationmark.triangle.fill")
                                 .foregroundColor(.orange)
                         }
                     }

@@ -32,27 +32,26 @@ struct ClassicTweakExecutor {
             return
         }
 
-        guard let appPath = settings.selectedRuntime == .crossover ? settings.crossoverAppPath : settings.cxpatcherAppPath else {
+        guard let runtime = RuntimeResolver.environment(for: settings),
+              runtime.isExecutableAvailable(runtime.classicWineExecutable) else {
             onError("❌ CrossOver or CXPatcher path is not set.")
             return
         }
-
-        let wineExec = appPath.appendingPathComponent("Contents/SharedSupport/CrossOver/bin/wine")
 
         guard let winetricksPath = extractEmbeddedWinetricksScript(onError: onError) else {
             return
         }
         
-        guard let wrapperScript = createWrapperScript(for: bottle, wineExec: wineExec, winetricksPath: winetricksPath, onError: onError) else {
+        guard let wrapperScript = createWrapperScript(for: bottle, runtime: runtime, winetricksPath: winetricksPath, onError: onError) else {
             onError("❌ Failed to create wine wrapper script.")
             return
         }
 
         let wineboot = Process()
         wineboot.executableURL = URL(fileURLWithPath: "/usr/bin/arch")
-        wineboot.arguments = ["-x86_64", wineExec.path, "wineboot"]
+        wineboot.arguments = ["-x86_64", runtime.classicWineExecutable.path, "wineboot"]
 
-        var env = ProcessInfo.processInfo.environment
+        var env = runtime.processEnvironment(for: bottle)
         env["WINEPREFIX"] = bottle.path.path
         wineboot.environment = env
 
@@ -172,12 +171,12 @@ struct ClassicTweakExecutor {
     // MARK: - Create winetricks Wrapper Script
     static func createWrapperScript(
         for bottle: Bottle,
-        wineExec: URL,
+        runtime: WineRuntimeEnvironment,
         winetricksPath: URL,
         onError: @escaping (String) -> Void
     ) -> URL? {
-        let tmpPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("winetricks-wrapper.sh")
-        let wineServer = wineExec.deletingLastPathComponent().appendingPathComponent("wineserver").path
+        let tmpPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BottleForge-\(UUID().uuidString)-winetricks-wrapper.sh")
 
         let scriptContent = """
         #!/bin/bash
@@ -186,9 +185,9 @@ struct ClassicTweakExecutor {
         export CX_BOTTLE="\(bottle.name)"
         export CX_BOTTLE_PATH="\(bottle.path.deletingLastPathComponent().path)"
         export WINETRICKS_ARCH=win64
-        export WINE="\(wineExec.path)"
-        export WINESERVER="\(wineServer)"
-        export WINELOADER="\(wineExec.path)"
+        export WINE="\(runtime.classicWineExecutable.path)"
+        export WINESERVER="\(runtime.classicWineServerExecutable.path)"
+        export WINELOADER="\(runtime.classicWineExecutable.path)"
         export WINEDEBUG=-all
 
         /bin/bash "\(winetricksPath.path)" "$@"

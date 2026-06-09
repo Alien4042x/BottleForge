@@ -19,12 +19,14 @@ struct BottleConfigView: View {
     @State private var isDirty = false
     @State private var loadingError: String?
     @State private var infoMessage: String?
-    @State private var existingBoolKeys: Set<String> = []
+    @State private var existingManagedKeys: Set<String> = []
     private let nonEditableKeys: Set<String> = [
         "D3DM_ENABLE_METALFX",
         "ROSETTA_ADVERTISE_AVX",
         "MTL_HUD_ENABLED",
-        "D3DM_SUPPORT_DXR"
+        "D3DM_SUPPORT_DXR",
+        "D3DM_MAX_FPS",
+        "D3DM_MTL4"
     ]
 
     private let defaultKeys: [String] = [
@@ -33,7 +35,9 @@ struct BottleConfigView: View {
         "D3DM_ENABLE_METALFX",
         "ROSETTA_ADVERTISE_AVX",
         "MTL_HUD_ENABLED",
-        "D3DM_SUPPORT_DXR"
+        "D3DM_SUPPORT_DXR",
+        "D3DM_MAX_FPS",
+        "D3DM_MTL4"
     ]
 
     private let skipKeys: Set<String> = [
@@ -46,124 +50,237 @@ struct BottleConfigView: View {
         var id: String { key }
         let key: String
         let description: String
-        let defaultOn: Bool
+        let defaultValue: String
+        let isBoolean: Bool
+        let badges: [TipBadge]
+
+        var defaultOn: Bool {
+            ["1", "true", "yes", "on"].contains(defaultValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+        }
+    }
+
+    private enum TipBadgeStyle: Hashable {
+        case macOS
+        case macOS26
+        case macOS27
+        case gptkOlder
+        case gptk3
+        case gptk4
+    }
+
+    private struct TipBadge: Identifiable, Hashable {
+        var id: String { text }
+        let text: String
+        let systemImage: String
+        let style: TipBadgeStyle
     }
 
     private let tips: [TipItem] = [
         TipItem(
-            key: "D3DM_ENABLE_METALFX",
-            description: "MetalFX upscaling (similar to DLSS/FSR). Increases FPS by rendering at lower resolution and upscaling on GPU. Not all games support it and requires that MetalFX is installed on your system.\nTo enable MetalFX: download GPTK from Apple, rename nvngx-on-metalfx.dll and .so to nvngx.dll and nvngx.so, nvngx.dll then put them with nvapi64.dll into system32 folder.",
-            defaultOn: true
+            key: "MTL_HUD_ENABLED",
+            description: "Metal HUD – GPU-only overlay with FPS and basic GPU metrics.",
+            defaultValue: "0",
+            isBoolean: true,
+            badges: [
+                TipBadge(text: "Older GPTK", systemImage: "clock.arrow.circlepath", style: .gptkOlder),
+                TipBadge(text: "GPTK 3", systemImage: "gamecontroller.fill", style: .gptk3),
+                TipBadge(text: "GPTK 4", systemImage: "gamecontroller.fill", style: .gptk4)
+            ]
         ),
         TipItem(
             key: "ROSETTA_ADVERTISE_AVX",
-            description: "Forces Rosetta 2 to report AVX support. Some x86 games may start only with this enabled, but it can cause crashes or glitches.",
-            defaultOn: false
+            description: "Makes Rosetta advertise AVX CPU capability to translated apps. It does not add new Rosetta instructions; it only changes what the app sees when it checks CPU features.",
+            defaultValue: "0",
+            isBoolean: true,
+            badges: [
+                TipBadge(text: "macOS 15+", systemImage: "apple.logo", style: .macOS),
+                TipBadge(text: "GPTK 3", systemImage: "gamecontroller.fill", style: .gptk3),
+                TipBadge(text: "GPTK 4", systemImage: "gamecontroller.fill", style: .gptk4)
+            ]
         ),
         TipItem(
-            key: "MTL_HUD_ENABLED",
-            description: "Metal HUD – GPU-only overlay with FPS and basic GPU metrics.",
-            defaultOn: false
+            key: "D3DM_ENABLE_METALFX",
+            description: "Converts supported DLSS calls to MetalFX where possible. Useful for games that expose DLSS, but support depends on the game and the evaluation environment.",
+            defaultValue: "1",
+            isBoolean: true,
+            badges: [
+                TipBadge(text: "macOS 26 Tahoe", systemImage: "apple.logo", style: .macOS26),
+                TipBadge(text: "GPTK 3", systemImage: "gamecontroller.fill", style: .gptk3),
+                TipBadge(text: "GPTK 4", systemImage: "gamecontroller.fill", style: .gptk4)
+            ]
         ),
         TipItem(
             key: "D3DM_SUPPORT_DXR",
-            description: "Enables DirectX Raytracing (DXR) features in D3DMetal’s DirectX 12 backend. Defaults to OFF on M1/M2 and ON on M3 and newer Macs. Turning this on may improve visual quality in supported games but can reduce performance.",
-            defaultOn: false
+            description: "Enables DirectX Raytracing support in D3DMetal’s DirectX 12 layer, so games that check for DXR can see the expected support and interfaces. Defaults OFF on M1/M2 and ON on M3 or newer.",
+            defaultValue: "0",
+            isBoolean: true,
+            badges: [
+                TipBadge(text: "GPTK 3", systemImage: "gamecontroller.fill", style: .gptk3),
+                TipBadge(text: "GPTK 4", systemImage: "gamecontroller.fill", style: .gptk4)
+            ]
+        ),
+        TipItem(
+            key: "D3DM_MAX_FPS",
+            description: "Caps the game or app to a chosen frame rate. The default quick-add value is 60 FPS, but you can edit it after adding the variable.",
+            defaultValue: "60",
+            isBoolean: false,
+            badges: [
+                TipBadge(text: "GPTK 4", systemImage: "gamecontroller.fill", style: .gptk4)
+            ]
+        ),
+        TipItem(
+            key: "D3DM_MTL4",
+            description: "Enables the Metal 4 backend for D3DMetal’s DirectX 12 layer. Turn it OFF to keep using the default backend.",
+            defaultValue: "1",
+            isBoolean: true,
+            badges: [
+                TipBadge(text: "Only for macOS 27", systemImage: "apple.logo", style: .macOS27),
+                TipBadge(text: "GPTK 4", systemImage: "gamecontroller.fill", style: .gptk4)
+            ]
         )
     ]
+
+    private struct RequirementBadge: View {
+        let badge: TipBadge
+
+        private var tint: Color {
+            switch badge.style {
+            case .macOS:
+                return .purple
+            case .macOS26:
+                return .orange
+            case .macOS27:
+                return Color(red: 0.24, green: 0.62, blue: 0.95)
+            case .gptkOlder:
+                return .secondary
+            case .gptk3:
+                return .red
+            case .gptk4:
+                return .green
+            }
+        }
+
+        var body: some View {
+            Label(badge.text, systemImage: badge.systemImage)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(tint)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule()
+                        .fill(tint.opacity(0.12))
+                        .overlay(
+                            Capsule()
+                                .stroke(tint.opacity(0.28), lineWidth: 1)
+                        )
+                )
+        }
+    }
 
     private func addTip(_ tip: TipItem) {
         // Do not duplicate if already present in file; if toggle exists, just set default state
         if let idx = toggles.firstIndex(where: { $0.key == tip.key }) {
+            toggles[idx].isBoolean = tip.isBoolean
             toggles[idx].isOn = tip.defaultOn
+            toggles[idx].value = tip.defaultValue
             if !nonEditableKeys.contains(tip.key) {
                 editingId = toggles[idx].id
             }
         } else {
-            let new = EnvToggle(key: tip.key, isOn: tip.defaultOn, isBoolean: true)
+            let new = EnvToggle(key: tip.key, isOn: tip.defaultOn, isBoolean: tip.isBoolean, value: tip.defaultValue)
             toggles.append(new)
             if !nonEditableKeys.contains(tip.key) {
                 editingId = new.id
             }
         }
-        existingBoolKeys.insert(tip.key)
+        existingManagedKeys.insert(tip.key)
         isDirty = true
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("🔧 Bottle Config")
-                .font(.title)
-            Text("Check if required dependencies are installed on your macOS system.")
-                .font(.system(size: 14))
-            Divider()
-
-            HStack {
-                Text("Bottle Config – Environment Variables")
-                    .font(.system(size: 16, weight: .semibold))
-                Spacer()
-                Button("Reload") { load() }
-                    .keyboardShortcut("r", modifiers: [.command])
-                Button("Save") { save() }
-                    .keyboardShortcut("s", modifiers: [.command])
-                    .disabled(!isDirty || appState.selectedBottle == nil)
-            }
-
-            if let err = loadingError {
-                Text("\(err)").foregroundColor(.red)
-            }
-            if let msg = infoMessage {
-                Text(msg).foregroundColor(.secondary)
-            }
-
-            if let bottle = appState.selectedBottle {
-                Text("Selected bottle: \(bottle.name)")
-                    .font(.system(size: 13))
-                    .foregroundColor(.secondary)
-
-                ToggleListView(toggles: $toggles, editingId: $editingId, nonEditableKeys: nonEditableKeys) {
-                    isDirty = true
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                SectionTitle(title: "Bottle Config", systemImage: "slider.horizontal.3")
+                Text("Check if required dependencies are installed on your macOS system.")
+                    .font(.system(size: 14))
+                Divider()
 
                 HStack {
-                    Button("Add variable") {
-                        let new = EnvToggle(key: "NEW_VARIABLE", isOn: false, isBoolean: true)
-                        toggles.append(new)
-                        editingId = new.id
+                    Text("Bottle Config – Environment Variables")
+                        .font(.system(size: 16, weight: .semibold))
+                    Spacer()
+                    Button("Reload") { load() }
+                        .keyboardShortcut("r", modifiers: [.command])
+                    Button("Save") { save() }
+                        .keyboardShortcut("s", modifiers: [.command])
+                        .disabled(!isDirty || appState.selectedBottle == nil)
+                }
+
+                if let err = loadingError {
+                    Text("\(err)").foregroundColor(.red)
+                }
+                if let msg = infoMessage {
+                    Text(msg).foregroundColor(.secondary)
+                }
+
+                if let bottle = appState.selectedBottle {
+                    Text("Selected bottle: \(bottle.name)")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+
+                    ToggleListView(toggles: $toggles, editingId: $editingId, nonEditableKeys: nonEditableKeys) {
                         isDirty = true
                     }
-                    .disabled(appState.selectedBottle == nil)
 
-                    Spacer()
-                }
-
-                GroupBox("Tips – Quick Add") {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(tips) { tip in
-                            HStack(alignment: .top, spacing: 12) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(tip.key)
-                                        .font(.system(size: 13, weight: .semibold))
-                                    Text(tip.description)
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(nil)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                        .layoutPriority(1)
-                                }
-                                Spacer()
-                                if !existingBoolKeys.contains(tip.key) {
-                                    Button("Add") { addTip(tip) }
-                                }
-                            }
-                            if tip.key != tips.last?.key { Divider() }
+                    HStack {
+                        Button("Add variable") {
+                            let new = EnvToggle(key: "NEW_VARIABLE", isOn: false, isBoolean: false, value: "")
+                            toggles.append(new)
+                            editingId = new.id
+                            isDirty = true
                         }
+                        .disabled(appState.selectedBottle == nil)
+
+                        Spacer()
                     }
-                    .padding(.horizontal, 6)
+
+                    GroupBox("Tips – Quick Add") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(tips) { tip in
+                                HStack(alignment: .top, spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(tip.key)
+                                            .font(.system(size: 13, weight: .semibold))
+                                        if !tip.badges.isEmpty {
+                                            HStack(spacing: 6) {
+                                                ForEach(tip.badges) { badge in
+                                                    RequirementBadge(badge: badge)
+                                                }
+                                            }
+                                        }
+                                        Text(tip.description)
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .layoutPriority(1)
+                                    }
+                                    Spacer()
+                                    if !toggles.contains(where: { $0.key == tip.key }) {
+                                        Button("Add") { addTip(tip) }
+                                    }
+                                }
+                                if tip.key != tips.last?.key { Divider() }
+                            }
+                        }
+                        .padding(.horizontal, 6)
+                    }
+                } else {
+                    Text("No bottle selected.").foregroundColor(.secondary)
                 }
-            } else {
-                Text("No bottle selected.").foregroundColor(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .padding(.trailing, 8)
         }
         .onAppear { load() }
     }
@@ -180,15 +297,13 @@ struct BottleConfigView: View {
             let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
             let envMap = parseEnvironmentVariables(from: text)
 
-            // Track which boolean-like keys are already present in file
+            // Track keys already present in file so quick-add does not duplicate them.
             var present: Set<String> = []
-            for (k, v) in envMap {
+            for (k, _) in envMap {
                 if skipKeys.contains(k) { continue }
-                let lowered = v.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                let isBoolLike = ["0","1","true","false","yes","no","on","off"].contains(lowered)
-                if isBoolLike { present.insert(k) }
+                present.insert(k)
             }
-            existingBoolKeys = present
+            existingManagedKeys = present
 
             var newToggles: [EnvToggle] = []
             for k in envMap.keys.sorted() {
@@ -196,11 +311,8 @@ struct BottleConfigView: View {
                 let raw = envMap[k]!
                 let lowered = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                 let isBoolLike = ["0","1","true","false","yes","no","on","off"].contains(lowered)
-                if !isBoolLike {
-                    continue
-                }
                 let on = normalizeBool(raw)
-                newToggles.append(EnvToggle(key: k, isOn: on, isBoolean: true))
+                newToggles.append(EnvToggle(key: k, isOn: on, isBoolean: isBoolLike, value: raw))
             }
             toggles = newToggles
             isDirty = false
@@ -214,6 +326,7 @@ struct BottleConfigView: View {
         loadingError = nil
         infoMessage = nil
         guard let bottle = appState.selectedBottle else { return }
+        normalizeTogglePresentation()
 
         // Helper for simple checksum (not cryptographic)
         func sha1(_ s: String) -> String {
@@ -259,7 +372,7 @@ struct BottleConfigView: View {
             }
 
             try text.write(to: url, atomically: true, encoding: .utf8)
-            existingBoolKeys = Set(toggles.map { $0.key })
+            existingManagedKeys = Set(toggles.map { $0.key })
             isDirty = false
             infoMessage = "Saved: \(url.path)"
         } catch {
@@ -269,10 +382,18 @@ struct BottleConfigView: View {
 
     private func togglesDict() -> [String: String] {
         var dict: [String: String] = [:]
-        for t in toggles where t.isBoolean {
-            dict[t.key] = t.isOn ? "1" : "0"
+        for t in toggles {
+            let key = t.key.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !key.isEmpty else { continue }
+            dict[key] = t.isBoolean ? (t.isOn ? "1" : "0") : t.value
         }
         return dict
+    }
+
+    private func normalizeTogglePresentation() {
+        for idx in toggles.indices {
+            toggles[idx].normalizePresentation()
+        }
     }
 
     // MARK: File helpers
@@ -355,9 +476,9 @@ struct BottleConfigView: View {
 
         func isManaged(_ key: String) -> Bool { return values[key] != nil }
         func wasManagedBefore(_ key: String) -> Bool {
-            // Keys we control via toggles: either known defaults or previously detected as boolean-like
+            // Keys we control via the UI: either known defaults or previously detected in the section.
             // Never treat skipKeys as managed for deletion
-            return (existingBoolKeys.contains(key) || defaultKeys.contains(key)) && !skipKeys.contains(key)
+            return (existingManagedKeys.contains(key) || defaultKeys.contains(key)) && !skipKeys.contains(key)
         }
 
         for line in bodyLines {
@@ -462,6 +583,20 @@ struct EnvToggle: Identifiable, Hashable {
     var key: String
     var isOn: Bool
     var isBoolean: Bool
+    var value: String
+
+    mutating func normalizePresentation() {
+        guard !isBoolean else { return }
+
+        let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowered = normalizedValue.lowercased()
+        value = normalizedValue
+
+        if ["0", "1", "true", "false", "yes", "no", "on", "off"].contains(lowered) {
+            isBoolean = true
+            isOn = ["1", "true", "yes", "on"].contains(lowered)
+        }
+    }
 }
 
 struct ToggleListView: View {
@@ -470,6 +605,7 @@ struct ToggleListView: View {
     let nonEditableKeys: Set<String>
     var onChange: () -> Void
     @FocusState private var focusedId: UUID?
+    @FocusState private var focusedValueId: UUID?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -477,29 +613,29 @@ struct ToggleListView: View {
                 let binding = $toggles[idx]
                 let t = toggles[idx]
                 HStack(alignment: .center, spacing: 12) {
-                    Toggle(isOn: binding.isOn) {
-                        Group {
-                            if editingId == t.id {
-                                TextField("ENV_VAR", text: binding.key)
-                                    .font(.system(size: 13))
-                                    .textFieldStyle(.roundedBorder)
-                                    .focused($focusedId, equals: t.id)
-                                    .onSubmit {
-                                        editingId = nil
-                                        onChange()
-                                    }
-                            } else {
-                                Text(t.key)
-                                    .font(.system(size: 13))
-                                    .onTapGesture(count: 2) {
-                                        guard !nonEditableKeys.contains(t.key) else { return }
-                                        editingId = t.id
-                                        focusedId = t.id
-                                    }
+                    Group {
+                        if t.isBoolean {
+                            Toggle(isOn: binding.isOn) {
+                                keyEditor(binding: binding, toggle: t)
                             }
+                            .toggleStyle(CheckboxToggleStyle())
+                        } else {
+                            keyEditor(binding: binding, toggle: t)
                         }
                     }
-                    .toggleStyle(CheckboxToggleStyle())
+
+                    if !t.isBoolean {
+                        TextField("Value", text: binding.value)
+                            .font(.system(size: 13))
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 140)
+                            .focused($focusedValueId, equals: t.id)
+                            .onSubmit {
+                                toggles[idx].normalizePresentation()
+                                focusedValueId = nil
+                                onChange()
+                            }
+                    }
 
                     Spacer()
 
@@ -513,11 +649,36 @@ struct ToggleListView: View {
                 }
                 .onChange(of: toggles[idx].isOn) { _ in onChange() }
                 .onChange(of: toggles[idx].key) { _ in onChange() }
+                .onChange(of: toggles[idx].value) { _ in onChange() }
                 Divider()
             }
         }
         .onChange(of: editingId) { new in
             focusedId = new
+        }
+    }
+
+    @ViewBuilder
+    private func keyEditor(binding: Binding<EnvToggle>, toggle: EnvToggle) -> some View {
+        Group {
+            if editingId == toggle.id {
+                TextField("ENV_VAR", text: binding.key)
+                    .font(.system(size: 13))
+                    .textFieldStyle(.roundedBorder)
+                    .focused($focusedId, equals: toggle.id)
+                    .onSubmit {
+                        editingId = nil
+                        onChange()
+                    }
+            } else {
+                Text(toggle.key)
+                    .font(.system(size: 13))
+                    .onTapGesture(count: 2) {
+                        guard !nonEditableKeys.contains(toggle.key) else { return }
+                        editingId = toggle.id
+                        focusedId = toggle.id
+                    }
+            }
         }
     }
 }
@@ -556,8 +717,7 @@ struct GameConfigView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("🎮 Game Config")
-                .font(.title)
+            SectionTitle(title: "Game Config", systemImage: "gamecontroller")
             Text("Generate and export one config file directly from UI. No long shell commands needed.")
                 .font(.system(size: 14))
             Divider()

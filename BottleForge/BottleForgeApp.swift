@@ -46,7 +46,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.titlebarAppearsTransparent = true
             // Use an opaque, modern dark background (not pure black)
             window.isOpaque = true
-            window.backgroundColor = NSColor(calibratedRed: 0.12, green: 0.14, blue: 0.17, alpha: 1.0)
+            window.backgroundColor = NSColor(calibratedRed: 0.085, green: 0.10, blue: 0.12, alpha: 1.0)
             window.isMovableByWindowBackground = true
             window.styleMask.insert(.fullSizeContentView)
         }

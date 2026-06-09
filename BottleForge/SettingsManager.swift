@@ -99,37 +99,19 @@ class SettingsManager: ObservableObject {
     }
 
     var wineExecutable: URL? {
-        let app = selectedRuntime == .crossover ? crossoverAppPath : cxpatcherAppPath
-        guard let app else { return nil }
-
-        let winePath = app
-            .appendingPathComponent("Contents")
-            .appendingPathComponent("SharedSupport")
-            .appendingPathComponent("CrossOver")
-            .appendingPathComponent("CrossOver-Hosted Application")
-            .appendingPathComponent("wine")
-
-        return FileManager.default.fileExists(atPath: winePath.path) ? winePath : nil
+        guard let runtime = RuntimeResolver.environment(for: self),
+              runtime.isExecutableAvailable(runtime.wineExecutable) else {
+            return nil
+        }
+        return runtime.wineExecutable
     }
     
     var regeditExecutable: URL? {
-        let selectedApp: URL? = {
-            switch selectedRuntime {
-            case .crossover: return crossoverAppPath
-            case .cxpatcher: return cxpatcherAppPath
-            }
-        }()
-
-        guard let app = selectedApp else { return nil }
-
-        let path = app
-            .appendingPathComponent("Contents")
-            .appendingPathComponent("SharedSupport")
-            .appendingPathComponent("CrossOver")
-            .appendingPathComponent("CrossOver-Hosted Application")
-            .appendingPathComponent("regedit")
-
-        return FileManager.default.fileExists(atPath: path.path) ? path : nil
+        guard let runtime = RuntimeResolver.environment(for: self),
+              runtime.isExecutableAvailable(runtime.regeditExecutable) else {
+            return nil
+        }
+        return runtime.regeditExecutable
     }
 
     var isValid: Bool {

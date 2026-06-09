@@ -108,7 +108,7 @@ struct AboutView: View {
                     .frame(width: 122)
 
                     Button("Close") {
-                        NSApp.keyWindow?.close()
+                        AboutWindowCoordinator.shared.close()
                     }
                     .buttonStyle(.borderedProminent)
                     .frame(width: 122)
@@ -215,15 +215,44 @@ private struct Particle: Identifiable {
     var driftY: CGFloat
 }
 
-func showCustomAboutWindow() {
-    let aboutView = AboutView()
-    let hostingController = NSHostingController(rootView: aboutView)
+private final class AboutWindowCoordinator: NSObject, NSWindowDelegate {
+    static let shared = AboutWindowCoordinator()
 
-    let window = NSWindow(contentViewController: hostingController)
-    window.title = "About BottleForge"
-    window.setContentSize(NSSize(width: 540, height: 640))
-    window.styleMask = [.titled, .closable, .miniaturizable]
-    window.isReleasedWhenClosed = false
-    window.center()
-    window.makeKeyAndOrderFront(nil)
+    private var window: NSWindow?
+
+    func show() {
+        if let window {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let aboutView = AboutView()
+        let hostingController = NSHostingController(rootView: aboutView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "About BottleForge"
+        window.setContentSize(NSSize(width: 540, height: 640))
+        window.styleMask = [.titled, .closable, .miniaturizable]
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        self.window = window
+    }
+
+    func close() {
+        window?.close()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        window?.delegate = nil
+        window = nil
+    }
+}
+
+func showCustomAboutWindow() {
+    AboutWindowCoordinator.shared.show()
 }

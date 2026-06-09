@@ -70,8 +70,8 @@ enum WineTricksMode: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .macOS: return "🍷 macOS Winetricks"
-        case .classic: return "📦 Classic Winetricks"
+        case .macOS: return "macOS Winetricks"
+        case .classic: return "Classic Winetricks"
         }
     }
 }
@@ -174,10 +174,10 @@ struct WineTricksView: View {
                 }
             }.pickerStyle(.segmented)
             
-            Text(selectedMode == .macOS ?
-                 "🍷 Winetricks macOS" :
-                 "📦 Classic Winetricks")
-            .font(.title)
+            SectionTitle(
+                title: selectedMode == .macOS ? "Winetricks macOS" : "Classic Winetricks",
+                systemImage: selectedMode == .macOS ? "wrench.and.screwdriver" : "terminal"
+            )
 
             Text(selectedMode == .macOS ?
                  "Custom Winetricks-style tweaks tailored for macOS with support for CrossOver and CXPatcher." :
@@ -192,7 +192,7 @@ struct WineTricksView: View {
                     .padding(6)
                     .background(RoundedRectangle(cornerRadius: 6).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
                 Spacer()
-                Button("🧹 Clear Cache for This Bottle") {
+                Button {
                     if let bottle = appState.selectedBottle {
                         clearBottleCache(bottle)
                         switch selectedMode {
@@ -200,6 +200,8 @@ struct WineTricksView: View {
                         case .classic: loadClassicTweaks()
                         }
                     }
+                } label: {
+                    Label("Clear Cache for This Bottle", systemImage: "trash")
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -208,7 +210,8 @@ struct WineTricksView: View {
             VStack{
                 if(selectedMode != .macOS)
                 {
-                    Text("⚠️ Some components are Linux-specific and may not behave as expected on macOS. Use with caution – tweaks are not always uninstallable and may require manual removal. Proceed only if you know what you're doing.").font(.system(size: 14))
+                    Label("Some components are Linux-specific and may not behave as expected on macOS. Use with caution – tweaks are not always uninstallable and may require manual removal. Proceed only if you know what you're doing.", systemImage: "exclamationmark.triangle.fill")
+                        .font(.system(size: 14))
                     if showLogPanel {
                         ScrollViewReader { proxy in
                             ScrollView {
@@ -315,9 +318,11 @@ struct WineTricksView: View {
                                            ProgressView()
                                                .progressViewStyle(CircularProgressViewStyle())
                                        } else {
-                                           Button("🗑️ Uninstall") {
+                                           Button {
                                                installingTweakID = tweak.id
                                                uninstallTweak(tweak)
+                                           } label: {
+                                               Label("Uninstall", systemImage: "trash")
                                            }
                                            .foregroundColor(.red)
                                        }
@@ -467,14 +472,17 @@ struct WineTricksView: View {
                 // Save Cache
                 saveToCache(data)
 
-                let installedKeys = UserDefaults.standard.stringArray(forKey: "installedTweaks") ?? []
                 let runtime = settings.selectedRuntime
 
                 let withStatus = decoded.tweaks.map { tweak -> WineTweak in
                     var t = tweak
                     if let bottle = appState.selectedBottle {
-                        let key = "\(tweak.id)@\(runtime.rawValue)@\(bottle.path.path)"
-                        t.installed = installedKeys.contains(key)
+                        t.installed = TweakInstallStateStore.isInstalled(
+                            id: tweak.id,
+                            kind: .macOS,
+                            runtime: runtime,
+                            bottle: bottle
+                        )
                     }
                     return t
                 }
@@ -482,8 +490,12 @@ struct WineTricksView: View {
                 let unified = decoded.tweaks.map { tweak -> UnifiedTweak in
                     var t = tweak
                     if let bottle = appState.selectedBottle {
-                        let key = "\(t.id)@\(runtime.rawValue)@\(bottle.path.path)"
-                        t.installed = installedKeys.contains(key)
+                        t.installed = TweakInstallStateStore.isInstalled(
+                            id: t.id,
+                            kind: .macOS,
+                            runtime: runtime,
+                            bottle: bottle
+                        )
                     }
                     return .mac(t)
                 }
@@ -522,6 +534,12 @@ struct WineTricksView: View {
                 onError(error)
             },
             onFinish: {
+                TweakInstallStateStore.markInstalled(
+                    id: tweak.id,
+                    kind: .classic,
+                    runtime: settings.selectedRuntime,
+                    bottle: bottle
+                )
                 loadClassicTweaks()
 
                 // MARK: - Success handler (classic tweak install complete)
@@ -578,8 +596,6 @@ struct WineTricksView: View {
 
             // Get Info to check installation
             let runtime = settings.selectedRuntime
-            let bottlePath = appState.selectedBottle?.path.path ?? ""
-            let installedKeys = UserDefaults.standard.stringArray(forKey: "installedClassicTweaks") ?? []
 
             // Remove duplicity + assign status
             var seen = Set<String>()
@@ -589,8 +605,16 @@ struct WineTricksView: View {
                 seen.insert($0.id).inserted
             }.map { tweak -> ClassicTweak in
                 var t = tweak
-                let key = "classic:\(t.id)@\(runtime.rawValue)@\(bottlePath)"
-                t.installed = installedKeys.contains(key)
+                if let bottle = appState.selectedBottle {
+                    t.installed = TweakInstallStateStore.isInstalled(
+                        id: t.id,
+                        kind: .classic,
+                        runtime: runtime,
+                        bottle: bottle
+                    )
+                } else {
+                    t.installed = false
+                }
                 return t
             }
 
@@ -666,14 +690,17 @@ struct WineTricksView: View {
 
         do {
             let decoded = try JSONDecoder().decode(WineTweakDatabase.self, from: data)
-            let installedKeys = UserDefaults.standard.stringArray(forKey: "installedTweaks") ?? []
             let runtime = settings.selectedRuntime
 
             let withStatus = decoded.tweaks.map { tweak -> WineTweak in
                 var t = tweak
                 if let bottle = appState.selectedBottle {
-                    let key = "\(tweak.id)@\(runtime.rawValue)@\(bottle.path.path)"
-                    t.installed = installedKeys.contains(key)
+                    t.installed = TweakInstallStateStore.isInstalled(
+                        id: tweak.id,
+                        kind: .macOS,
+                        runtime: runtime,
+                        bottle: bottle
+                    )
                 }
                 return t
             }
@@ -732,18 +759,19 @@ struct WineTricksView: View {
         let runtime = settings.selectedRuntime
         guard let bottle = appState.selectedBottle else { return }
 
-        let key = "\(tweak.id)@\(runtime.rawValue)@\(bottle.path.path)"
-
         TweakExecutor.uninstall(tweak, from: bottle, using: settings) { error in
             errorMessage = error
             showErrorAlert = true
         } onFinish: {
-            var installed = UserDefaults.standard.stringArray(forKey: "installedTweaks") ?? []
-            installed.removeAll { $0 == key }
-            UserDefaults.standard.set(installed, forKey: "installedTweaks")
+            TweakInstallStateStore.markUninstalled(
+                id: tweak.id,
+                kind: .macOS,
+                runtime: runtime,
+                bottle: bottle
+            )
             loadTweaks()
             #if DEBUG
-            print("🗑️ Tweak \(tweak.title) uninstalled (\(key))")
+            print("🗑️ Tweak \(tweak.title) uninstalled")
             #endif
             installingTweakID = nil
         }
@@ -756,26 +784,22 @@ struct WineTricksView: View {
         let runtime = settings.selectedRuntime
         guard let bottle = appState.selectedBottle else { return }
 
-        let key = "\(id)@\(runtime.rawValue)@\(bottle.path.path)"  // ✅ runtime + bottle path
-        var installed = UserDefaults.standard.stringArray(forKey: "installedTweaks") ?? []
-
-        if !installed.contains(key) {
-            installed.append(key)
-            UserDefaults.standard.set(installed, forKey: "installedTweaks")
-            #if DEBUG
-            print("✅ Marked as installed: \(key)")
-            #endif
-        }
+        TweakInstallStateStore.markInstalled(
+            id: id,
+            kind: .macOS,
+            runtime: runtime,
+            bottle: bottle
+        )
+        #if DEBUG
+        print("✅ Marked as installed: \(id)")
+        #endif
     }
     
     // MARK: - Remove tweak install keys for current bottle
     func clearBottleCache(_ bottle: Bottle) {
-        let bottlePath = bottle.path.path
-        var installed = UserDefaults.standard.stringArray(forKey: "installedTweaks") ?? []
-        installed.removeAll(where: { $0.contains(bottlePath) })
-        UserDefaults.standard.set(installed, forKey: "installedTweaks")
+        TweakInstallStateStore.clearBottle(bottle)
         #if DEBUG
-        print("🧹 Cleared cache for bottle at path: \(bottlePath)")
+        print("🧹 Cleared cache for bottle at path: \(bottle.path.path)")
         #endif
     }
 }

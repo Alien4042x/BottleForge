@@ -36,14 +36,13 @@ struct DiagnosticsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("🩺 Diagnostics")
-                .font(.title)
+            SectionTitle(title: "Diagnostics", systemImage: "stethoscope")
             Text("Diagnostic tools for fixing missing DLLs or misconfigurations.")
                 .font(.system(size: 14))
 
             Divider()
 
-            Text("ℹ️ This fix overrides Visual C++ runtime libraries from versions 2015 to 2022. Use only if your app or game keeps asking to install them.")
+            Label("This fix overrides Visual C++ runtime libraries from versions 2015 to 2022. Use only if your app or game keeps asking to install them.", systemImage: "info.circle")
                 .font(.system(size: 14))
                 .padding(.bottom, 4)
 
@@ -60,14 +59,16 @@ struct DiagnosticsView: View {
 
                 Spacer()
 
-                Button("🛠️ Run Fix") {
+                Button {
                     applyDiagnosticFix(vcppFix)
+                } label: {
+                    Label("Run Fix", systemImage: "wrench.and.screwdriver")
                 }
                 .buttonStyle(.borderedProminent)
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
-            .alert("✅ Fix Applied", isPresented: $showSuccess) {
+            .background(diagnosticCardBackground)
+            .alert("Fix Applied", isPresented: $showSuccess) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("The diagnostic fix \"\(vcppFix.title)\" was successfully applied.")
@@ -93,7 +94,7 @@ struct DiagnosticsView: View {
                     .foregroundColor(.red)
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.18, green: 0.20, blue: 0.24)))
+            .background(diagnosticCardBackground)
             .alert("Done", isPresented: $showSuccessMetalFX) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -108,10 +109,19 @@ struct DiagnosticsView: View {
         }
     }
 
+    private var diagnosticCardBackground: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color(red: 0.18, green: 0.20, blue: 0.24))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
+            )
+    }
+
     
     func applyDiagnosticFix(_ fix: DiagnosticFix) {
         guard let bottle = appState.selectedBottle else {
-            errorMessage = "❌ No bottle selected."
+            errorMessage = "No bottle selected."
             showError = true
             return
         }
@@ -156,7 +166,7 @@ struct DiagnosticsView: View {
     // MARK: - MetalFX registry toggle
     func applyMetalFX(enable: Bool) {
         guard let bottle = appState.selectedBottle else {
-            errorMessage = "❌ No bottle selected."
+            errorMessage = "No bottle selected."
             showError = true
             return
         }
@@ -176,7 +186,7 @@ struct DiagnosticsView: View {
             errorMessage = err
             showError = true
         }, onFinish: {
-            successMessage = enable ? "✅ MetalFX has been enabled for this bottle." : "✅ MetalFX has been disabled for this bottle."
+            successMessage = enable ? "MetalFX has been enabled for this bottle." : "MetalFX has been disabled for this bottle."
             showSuccessMetalFX = true
         })
     }
@@ -184,7 +194,7 @@ struct DiagnosticsView: View {
     // MARK: - Hard delete MetalFX values via .reg minus syntax
     func deleteMetalFXKeys() {
         guard let bottle = appState.selectedBottle else {
-            errorMessage = "❌ No bottle selected."
+            errorMessage = "No bottle selected."
             showError = true
             return
         }
@@ -201,7 +211,7 @@ struct DiagnosticsView: View {
             errorMessage = err
             showError = true
         }, onFinish: {
-            successMessage = "✅ MetalFX keys were deleted from this bottle."
+            successMessage = "MetalFX keys were deleted from this bottle."
             showSuccessMetalFX = true
         })
     }
