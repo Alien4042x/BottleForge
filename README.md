@@ -9,6 +9,8 @@ Whether you're a gamer or tinkerer, it helps apply common fixes for compatibilit
 
 - 🎯 Also check out [StealthPointer](https://github.com/Alien4042x/StealthPointer) - hide/show your macOS cursor with hotkeys. Perfect for Wine fullscreen gaming!
 
+<img width="2000" height="1068" alt="bottleforge" src="https://github.com/user-attachments/assets/27aad231-32e2-4bb9-b672-7774839fdfbb" />
+
 ---
 
 ## Features
@@ -108,13 +110,6 @@ High temperatures while gaming?
 This project is licensed under the **Mozilla Public License 2.0**.
 If you modify and distribute any part of the source, you must publish those changes under the same license.
 More info: [https://mozilla.org/MPL/2.0/](https://mozilla.org/MPL/2.0/)
-
----
-
-## Screenshots
-
-<img width="1652" height="944" alt="Snímek obrazovky 2025-10-02 v 19 43 00" src="https://github.com/user-attachments/assets/ba774f99-317d-4b7a-8a53-5bda937618e9" />
-<img width="1652" height="944" alt="Snímek obrazovky 2025-10-02 v 19 44 17" src="https://github.com/user-attachments/assets/ffc0d52b-1e47-4ead-b0a4-1763d6e1e9e5" />
 
 ---
 
